@@ -2,3 +2,4 @@
 .envrc
 node_modules
 dist
+*.ohm-bundle.*
