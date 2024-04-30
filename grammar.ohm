@@ -1,0 +1,67 @@
+Klog <: IndentationSensitive {
+  // TODO: allow blankCharacters between records
+  file = (" "* newline)* record (newline newline+ record)* -- blankStart
+       | record (newline newline+ record)* -- recordStart
+
+  record = date (" " shouldTotal)? newline (~(blankCharacter+) recordSummary eol)? (entry (newline entry)*)?
+  
+  shouldTotal = "(" duration "!)"
+
+  entry = indent (duration | timeRange) entrySummary?
+
+  // TODO: parsing tags in summaries
+  recordSummary = (~(any newline) any)* (~newline any) newline ~(indent | blankCharacter) recordSummary -- wrap
+                | (~(any eol) any)* (~eol any) &eol -- single
+
+  entrySummary = " " entrySummarySameLine -- same
+               | newline entrySummaryNextLine -- next
+
+  // Entry summaries are allowed to wrap or start on the next line.
+  entrySummarySameLine = (~(any newline) any)* (~newline any) newline indent indent entrySummarySameLine -- wrap
+                       | (~(any eol) any)* (~eol any) &eol -- single
+  entrySummaryNextLine = indent indent entrySummarySameLine
+
+  date = digit digit digit digit "-" digit digit "-" digit digit
+       | digit digit digit digit "/" digit digit "/" digit digit
+
+  duration = ("-" | "+")? digit+ "h" "0".."5"? digit "m" -- hourMinute
+           | ("-" | "+")? digit+ "h" -- hour
+           | ("-" | "+")? digit+ "m" -- minute
+
+  timeRange = (backwardsShiftedTime | time) " "* "-" " "* "?"+ -- open
+            | (backwardsShiftedTime | time) " "* "-" " "* (forwardsShiftedTime | time) -- closed
+
+  backwardsShiftedTime = "<" time
+  forwardsShiftedTime = time ">"
+
+  // am/pm is optional for now, otherwise times like `1:45` break weirdly.
+  time = ("1" "0".."2" | "0"? digit) ":" "0".."5" digit ("am" | "pm")? -- twelveHour
+       | ("2" "0".."4" | "0".."1"? digit) ":" "0".."5" digit -- twentyFourHour
+
+  eol = newline | end
+  newline = "\n" | "\r\n"
+  indent = (" ") (" ") (" ")? (" ")? -- spaces
+         | "\t"
+  summaryChar = ~blankCharacter any
+
+  // TODO: comprehensive tests around these and summaries.
+  // Characters as defined in the Unicode "Space Separator" category, and tab.
+  blankCharacter = "\t"
+                 | "\u0020"
+                 | "\u00A0"
+                 | "\u1680"
+                 | "\u2000"
+                 | "\u2001"
+                 | "\u2002"
+                 | "\u2003"
+                 | "\u2004"
+                 | "\u2005"
+                 | "\u2006"
+                 | "\u2007"
+                 | "\u2008"
+                 | "\u2009"
+                 | "\u200A"
+                 | "\u202F"
+                 | "\u205F"
+                 | "\u3000"
+}
