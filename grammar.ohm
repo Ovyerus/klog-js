@@ -1,7 +1,6 @@
-Klog <: IndentationSensitive {
+Klog {
   // TODO: allow blankCharacters between records
-  file = (" "* newline)* record (newline newline+ record)* -- blankStart
-       | record (newline newline+ record)* -- recordStart
+  file = (" "* newline)* record (newline newline+ record)* newline* end
 
   record = date (" " shouldTotal)? newline (~(blankCharacter+) recordSummary eol)? (entry (newline entry)*)?
   
