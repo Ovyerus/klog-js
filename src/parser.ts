@@ -1,6 +1,4 @@
 import { toAST } from "ohm-js/extras";
-import { readFileSync } from "node:fs";
-import { inspect } from "node:util";
 import grammar, { KlogActionDict } from "./grammar.ohm-bundle.js";
 import type {
   DurationNode,
@@ -12,8 +10,9 @@ import type {
   TimeRangeNode,
 } from "./types.js";
 
-const test = readFileSync("./test.klg", "utf8");
+// TODO: parse and validate times & durations
 
+// TODO: enforcing consistent indents & newlines
 const mapping: KlogActionDict<KlogNode> = {
   file(_, __, record1, ___, ____, records, _____, ______): FileNode {
     return {
@@ -128,5 +127,15 @@ const mapping: KlogActionDict<KlogNode> = {
   }),
 };
 
-const match = grammar.match(test);
-console.log(inspect(toAST(match, mapping), { depth: 100, colors: true }));
+// TODO: map of rules to node types
+const parse = (source: string, rule?: string): KlogNode => {
+  if ((!source.trim() && !rule) || rule === "file")
+    return { type: "file", records: [] };
+
+  const match = grammar.match(source, rule);
+
+  if (match.succeeded()) return toAST(match, mapping) as KlogNode;
+  else throw new Error(match.message);
+};
+
+export default parse;

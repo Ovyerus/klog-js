@@ -1,0 +1,39 @@
+{
+  "records": [
+    {
+      "date": "2018-03-24",
+      "entries": [
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "end": {
+              "shift": null,
+              "type": "time",
+              "value": "17:00",
+            },
+            "open": false,
+            "start": {
+              "shift": null,
+              "type": "time",
+              "value": "8:30",
+            },
+            "type": "timeRange",
+          },
+        },
+        {
+          "summary": "Lunch break",
+          "type": "entry",
+          "value": {
+            "type": "duration",
+            "value": "-45m",
+          },
+        },
+      ],
+      "shouldTotal": null,
+      "summary": "First day at my new job",
+      "type": "record",
+    },
+  ],
+  "type": "file",
+}

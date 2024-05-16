@@ -1,0 +1,108 @@
+{
+  "records": [
+    {
+      "date": "2018-03-24",
+      "entries": [
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "end": {
+              "shift": null,
+              "type": "time",
+              "value": "17:00",
+            },
+            "open": false,
+            "start": {
+              "shift": null,
+              "type": "time",
+              "value": "8:30",
+            },
+            "type": "timeRange",
+          },
+        },
+        {
+          "summary": "Lunch break",
+          "type": "entry",
+          "value": {
+            "type": "duration",
+            "value": "-45m",
+          },
+        },
+      ],
+      "shouldTotal": null,
+      "summary": "First day at my new job",
+      "type": "record",
+    },
+    {
+      "date": "2018-03-25",
+      "entries": [
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "type": "duration",
+            "value": "8h15m",
+          },
+        },
+      ],
+      "shouldTotal": "8h30m",
+      "summary": null,
+      "type": "record",
+    },
+    {
+      "date": "2018-03-26",
+      "entries": [
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "end": {
+              "shift": null,
+              "type": "time",
+              "value": "11:15",
+            },
+            "open": false,
+            "start": {
+              "shift": null,
+              "type": "time",
+              "value": "8:30",
+            },
+            "type": "timeRange",
+          },
+        },
+        {
+          "summary": "Meeting with Sarah",
+          "type": "entry",
+          "value": {
+            "end": {
+              "shift": null,
+              "type": "time",
+              "value": "12:20",
+            },
+            "open": false,
+            "start": {
+              "shift": null,
+              "type": "time",
+              "value": "11:15",
+            },
+            "type": "timeRange",
+          },
+        },
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "type": "duration",
+            "value": "4h",
+          },
+        },
+      ],
+      "shouldTotal": null,
+      "summary": "More onboarding. Also started
+to work on my first small project!",
+      "type": "record",
+    },
+  ],
+  "type": "file",
+}

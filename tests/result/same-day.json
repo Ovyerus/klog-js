@@ -1,0 +1,65 @@
+{
+  "records": [
+    {
+      "date": "2024-04-29",
+      "entries": [
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "end": {
+              "shift": null,
+              "type": "time",
+              "value": "11:30",
+            },
+            "open": false,
+            "start": {
+              "shift": null,
+              "type": "time",
+              "value": "9:30",
+            },
+            "type": "timeRange",
+          },
+        },
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "type": "duration",
+            "value": "45m",
+          },
+        },
+      ],
+      "shouldTotal": null,
+      "summary": null,
+      "type": "record",
+    },
+    {
+      "date": "2024-04-29",
+      "entries": [
+        {
+          "summary": null,
+          "type": "entry",
+          "value": {
+            "end": {
+              "shift": null,
+              "type": "time",
+              "value": "17:30",
+            },
+            "open": false,
+            "start": {
+              "shift": null,
+              "type": "time",
+              "value": "13:00",
+            },
+            "type": "timeRange",
+          },
+        },
+      ],
+      "shouldTotal": null,
+      "summary": null,
+      "type": "record",
+    },
+  ],
+  "type": "file",
+}
