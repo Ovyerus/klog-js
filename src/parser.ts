@@ -22,23 +22,62 @@ const mapping: KlogActionDict<KlogNode> = {
     };
   },
 
-  record(
-    date,
+  record: (value) => value.toAST(mapping),
+
+  record_summaryAndEntries(
+    recordHead,
     _,
-    shouldTotal,
-    __,
     summary,
-    ___,
+    __,
     entry1,
-    ____,
+    ___,
     entries
   ): RecordNode {
     return {
       type: "record",
+      ...recordHead.toAST(mapping),
+      summary: summary.toAST(mapping),
+      entries: [entry1.toAST(mapping)]
+        .concat(entries.toAST(mapping))
+        // Remove `null` (incase no entries are defined)
+        .filter((x) => x),
+    };
+  },
+
+  record_entries(recordHead, _, entry1, __, entries): RecordNode {
+    return {
+      type: "record",
+      ...recordHead.toAST(mapping),
+      summary: null,
+      entries: [entry1.toAST(mapping)]
+        .concat(entries.toAST(mapping))
+        // Remove `null` (incase no entries are defined)
+        .filter((x) => x),
+    };
+  },
+
+  record_summary(recordHead, _, summary): RecordNode {
+    return {
+      type: "record",
+      ...recordHead.toAST(mapping),
+      summary: summary.toAST(mapping),
+      entries: [],
+    };
+  },
+
+  record_empty(recordHead): RecordNode {
+    return {
+      type: "record",
+      ...recordHead.toAST(mapping),
+      summary: null,
+      entries: [],
+    };
+  },
+
+  recordHead(date, _, shouldTotal): any {
+    return {
       date: date.toAST(mapping),
       shouldTotal: shouldTotal.toAST(mapping),
-      summary: summary.toAST(mapping),
-      entries: [entry1.toAST(mapping)].concat(entries.toAST(mapping)),
     };
   },
 
@@ -50,6 +89,7 @@ const mapping: KlogActionDict<KlogNode> = {
     summary: summary.toAST(mapping),
   }),
 
+  recordSummary: (value) => value.toAST(mapping).trim(),
   entrySummary: (value) => value.toAST(mapping).trim(),
   timeRange: (range) => range.toAST(mapping),
 

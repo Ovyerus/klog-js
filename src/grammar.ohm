@@ -2,19 +2,27 @@ Klog {
   // TODO: allow blankCharacters between records
   file = (" "* newline)* record (newline newline+ record)* newline* end
 
-  record = date (" " shouldTotal)? newline (~(blankCharacter+) recordSummary eol)? (entry (newline entry)*)?
+  // record = date (" " shouldTotal)? newline (~(blankCharacter+) recordSummary eol)? (entry (newline entry)*)?
+  record = recordHead newline recordSummary newline (entry (newline entry)*) -- summaryAndEntries
+         | recordHead newline (entry (newline entry)*) -- entries
+         | recordHead newline recordSummary -- summary
+         | recordHead -- empty
+
+  recordHead = date (" " shouldTotal)?
   
   shouldTotal = "(" duration "!)"
 
   entry = indent (duration | timeRange) entrySummary?
 
   // TODO: parsing tags in summaries
-  recordSummary = (~(any newline) any)* (~newline any) newline ~(indent | blankCharacter) recordSummary -- wrap
-                | (~(any eol) any)* (~eol any) &eol -- single
+  recordSummary = summaryChar (~(any newline) any)* (~newline any) newline recordSummary -- wrap
+                 | summaryChar (~(any eol) any)* (~eol any) &eol -- single
+  summaryChar = ~(blankCharacter | newline) any
 
   entrySummary = " " entrySummarySameLine -- same
                | newline entrySummaryNextLine -- next
 
+  // TODO: double check blank lines arent allowed here either
   // Entry summaries are allowed to wrap or start on the next line.
   entrySummarySameLine = (~(any newline) any)* (~newline any) newline indent indent entrySummarySameLine -- wrap
                        | (~(any eol) any)* (~eol any) &eol -- single
@@ -23,7 +31,7 @@ Klog {
   date = digit digit digit digit "-" digit digit "-" digit digit
        | digit digit digit digit "/" digit digit "/" digit digit
 
-  duration = ("-" | "+")? digit+ "h" "0".."5"? digit "m" -- hourMinute
+  duration = ("-" | "+")? digit+ "h" ("0".."5" digit | digit &"") "m" -- hourMinute
            | ("-" | "+")? digit+ "h" -- hour
            | ("-" | "+")? digit+ "m" -- minute
 
@@ -41,12 +49,11 @@ Klog {
   newline = "\n" | "\r\n"
   indent = (" ") (" ") (" ")? (" ")? -- spaces
          | "\t"
-  summaryChar = ~blankCharacter any
 
   // TODO: comprehensive tests around these and summaries.
   // Characters as defined in the Unicode "Space Separator" category, and tab.
   blankCharacter = "\t"
-                 | "\u0020"
+                 | " "
                  | "\u00A0"
                  | "\u1680"
                  | "\u2000"
