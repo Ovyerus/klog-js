@@ -1,3 +1,5 @@
+import type { Duration } from "date-fns";
+
 export interface FileNode {
   type: "file";
   records: RecordNode[];
@@ -32,7 +34,7 @@ export interface TimeNode {
 
 export interface DurationNode {
   type: "duration";
-  value: string;
+  value: Duration;
 }
 
 export type KlogNode =

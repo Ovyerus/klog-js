@@ -26,7 +26,10 @@
           "type": "entry",
           "value": {
             "type": "duration",
-            "value": "-45m",
+            "value": {
+              "hours": 0,
+              "minutes": -45,
+            },
           },
         },
       ],
@@ -42,11 +45,17 @@
           "type": "entry",
           "value": {
             "type": "duration",
-            "value": "8h15m",
+            "value": {
+              "hours": 8,
+              "minutes": 15,
+            },
           },
         },
       ],
-      "shouldTotal": "8h30m",
+      "shouldTotal": {
+        "hours": 8,
+        "minutes": 30,
+      },
       "summary": null,
       "type": "record",
     },
@@ -94,7 +103,10 @@
           "type": "entry",
           "value": {
             "type": "duration",
-            "value": "4h",
+            "value": {
+              "hours": 4,
+              "minutes": 0,
+            },
           },
         },
       ],

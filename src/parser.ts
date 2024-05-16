@@ -9,6 +9,7 @@ import type {
   TimeNode,
   TimeRangeNode,
 } from "./types.js";
+import type { Duration } from "date-fns";
 
 // TODO: parse and validate times & durations
 
@@ -109,6 +110,43 @@ const mapping: KlogActionDict<KlogNode> = {
     type: "duration",
     value: value.toAST(mapping),
   }),
+
+  duration_hour($sign, $value, _): any {
+    const sign = $sign.toAST(mapping) || "+";
+    const mul = sign === "-" ? -1 : 1;
+    const value = parseInt($value.toAST(mapping).join(""), 10);
+
+    return {
+      hours: value * mul,
+      minutes: 0,
+    } as Duration;
+  },
+
+  duration_minute($sign, $value, _): any {
+    const sign = $sign.toAST(mapping) || "+";
+    const mul = sign === "-" ? -1 : 1;
+    const value = parseInt($value.toAST(mapping).join(""), 10);
+
+    return {
+      hours: 0,
+      minutes: value * mul,
+    } as Duration;
+  },
+
+  duration_hourMinute($sign, $hours, _, minute1, minute2, __): any {
+    const sign = $sign.toAST(mapping) || "+";
+    const mul = sign === "-" ? -1 : 1;
+    const hours = parseInt($hours.toAST(mapping).join(""), 10);
+    const minutes = parseInt(
+      minute1.toAST(mapping) + minute2.toAST(mapping),
+      10
+    );
+
+    return {
+      hours: hours * mul,
+      minutes: minutes * mul,
+    } as Duration;
+  },
 
   time: (value): TimeNode => ({
     type: "time",

@@ -69,7 +69,7 @@ describe("full files", () => {
             {
               type: "entry",
               summary: null,
-              value: { type: "duration", value: "7h" },
+              value: { type: "duration", value: { hours: 7, minutes: 0 } },
             },
           ],
         },
@@ -120,27 +120,36 @@ describe("durations", () => {
   describe("minutes", () => {
     test("implicit positive", () => {
       const result = parse("45m", "duration");
-      expect(result).toEqual({ type: "duration", value: "45m" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 0, minutes: 45 },
+      });
     });
 
     test("explicit positive", () => {
       const result = parse("+39m", "duration");
-      expect(result).toEqual({ type: "duration", value: "+39m" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 0, minutes: 39 },
+      });
     });
 
     test("negative", () => {
       const result = parse("-5m", "duration");
-      expect(result).toEqual({ type: "duration", value: "-5m" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 0, minutes: -5 },
+      });
     });
 
     test("big values", () => {
       expect(parse("1337m", "duration")).toEqual({
         type: "duration",
-        value: "1337m",
+        value: { hours: 0, minutes: 1337 },
       });
       expect(parse("-90001m", "duration")).toEqual({
         type: "duration",
-        value: "-90001m",
+        value: { hours: 0, minutes: -90001 },
       });
     });
   });
@@ -148,27 +157,36 @@ describe("durations", () => {
   describe("hours", () => {
     test("implicit positive", () => {
       const result = parse("12h", "duration");
-      expect(result).toEqual({ type: "duration", value: "12h" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 12, minutes: 0 },
+      });
     });
 
     test("explicit positive", () => {
       const result = parse("+2h", "duration");
-      expect(result).toEqual({ type: "duration", value: "+2h" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 2, minutes: 0 },
+      });
     });
 
     test("negative", () => {
       const result = parse("-5h", "duration");
-      expect(result).toEqual({ type: "duration", value: "-5h" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: -5, minutes: 0 },
+      });
     });
 
     test("big values", () => {
       expect(parse("75h", "duration")).toEqual({
         type: "duration",
-        value: "75h",
+        value: { hours: 75, minutes: 0 },
       });
       expect(parse("-1001h", "duration")).toEqual({
         type: "duration",
-        value: "-1001h",
+        value: { hours: -1001, minutes: 0 },
       });
     });
   });
@@ -176,49 +194,58 @@ describe("durations", () => {
   describe("combined", () => {
     test("implicit positive", () => {
       const result = parse("1h23m", "duration");
-      expect(result).toEqual({ type: "duration", value: "1h23m" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 1, minutes: 23 },
+      });
     });
 
     test("explicit positive", () => {
       const result = parse("+3h38m", "duration");
-      expect(result).toEqual({ type: "duration", value: "+3h38m" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: 3, minutes: 38 },
+      });
     });
 
     test("negative", () => {
       const result = parse("-15h48m", "duration");
-      expect(result).toEqual({ type: "duration", value: "-15h48m" });
+      expect(result).toEqual({
+        type: "duration",
+        value: { hours: -15, minutes: -48 },
+      });
     });
 
     test("single digit minutes", () => {
       expect(parse("2h3m", "duration")).toEqual({
         type: "duration",
-        value: "2h3m",
+        value: { hours: 2, minutes: 3 },
       });
       expect(parse("5h9m", "duration")).toEqual({
         type: "duration",
-        value: "5h9m",
+        value: { hours: 5, minutes: 9 },
       });
     });
 
     test("big hour values", () => {
       expect(parse("+400h10m", "duration")).toEqual({
         type: "duration",
-        value: "+400h10m",
+        value: { hours: 400, minutes: 10 },
       });
       expect(parse("-99999h43m", "duration")).toEqual({
         type: "duration",
-        value: "-99999h43m",
+        value: { hours: -99999, minutes: -43 },
       });
     });
 
     test("allows 0 values", () => {
       expect(parse("0h37m", "duration")).toEqual({
         type: "duration",
-        value: "0h37m",
+        value: { hours: 0, minutes: 37 },
       });
       expect(parse("7h0m", "duration")).toEqual({
         type: "duration",
-        value: "7h0m",
+        value: { hours: 7, minutes: 0 },
       });
     });
 
@@ -406,25 +433,25 @@ describe("entries", () => {
       expect(parse("    30m", "entry")).toEqual({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: "30m" },
+        value: { type: "duration", value: { hours: 0, minutes: 30 } },
       });
       // 3-space indent
       expect(parse("   +1h", "entry")).toEqual({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: "+1h" },
+        value: { type: "duration", value: { hours: 1, minutes: 0 } },
       });
       // 2-space indent
       expect(parse("  -92m", "entry")).toEqual({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: "-92m" },
+        value: { type: "duration", value: { hours: 0, minutes: -92 } },
       });
       // tab indent
       expect(parse("\t5h12m", "entry")).toEqual({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: "5h12m" },
+        value: { type: "duration", value: { hours: 5, minutes: 12 } },
       });
     });
 

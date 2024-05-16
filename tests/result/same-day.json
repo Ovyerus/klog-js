@@ -26,7 +26,10 @@
           "type": "entry",
           "value": {
             "type": "duration",
-            "value": "45m",
+            "value": {
+              "hours": 0,
+              "minutes": 45,
+            },
           },
         },
       ],
