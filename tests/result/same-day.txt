@@ -1,7 +1,7 @@
 {
   "records": [
     {
-      "date": "2024-04-29",
+      "date": 2024-04-28T14:00:00.000Z,
       "entries": [
         {
           "summary": null,
@@ -38,7 +38,7 @@
       "type": "record",
     },
     {
-      "date": "2024-04-29",
+      "date": 2024-04-28T14:00:00.000Z,
       "entries": [
         {
           "summary": null,

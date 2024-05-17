@@ -9,9 +9,9 @@ import type {
   TimeNode,
   TimeRangeNode,
 } from "./types.js";
-import type { Duration } from "date-fns";
+import { isValid, parseISO, type Duration } from "date-fns";
 
-// TODO: parse and validate times & durations
+// TODO: parse and validate times
 
 // TODO: enforcing consistent indents & newlines
 const mapping: KlogActionDict<KlogNode> = {
@@ -163,6 +163,17 @@ const mapping: KlogActionDict<KlogNode> = {
     ...time.toAST(mapping),
     shift: "tomorrow",
   }),
+
+  date(y1, y2, y3, y4, sep1, m1, m2, sep2, d1, d2): any {
+    const dateString = [y1, y2, y3, y4, sep1, m1, m2, sep2, d1, d2]
+      .map((x) => x.toAST(mapping))
+      .join("")
+      .replaceAll("/", "-");
+    const date = parseISO(dateString);
+
+    if (!isValid(date)) throw new Error(`Invalid date ${dateString}`);
+    return date;
+  },
 };
 
 // TODO: map of rules to node types

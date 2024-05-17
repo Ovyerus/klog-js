@@ -1,7 +1,7 @@
 {
   "records": [
     {
-      "date": "2018-03-24",
+      "date": 2018-03-23T13:00:00.000Z,
       "entries": [
         {
           "summary": null,
@@ -38,7 +38,7 @@
       "type": "record",
     },
     {
-      "date": "2018-03-25",
+      "date": 2018-03-24T13:00:00.000Z,
       "entries": [
         {
           "summary": null,
@@ -60,7 +60,7 @@
       "type": "record",
     },
     {
-      "date": "2018-03-26",
+      "date": 2018-03-25T13:00:00.000Z,
       "entries": [
         {
           "summary": null,

@@ -18,12 +18,12 @@ const sameDay = await readCorpus("same-day.klg");
 describe("full files", () => {
   test("parses file with single record", () => {
     const result = parse(singleRecord);
-    expect(result).toMatchFileSnapshot("./result/single.json");
+    expect(result).toMatchFileSnapshot("./result/single.txt");
   });
 
   test("parses file with multiple records", () => {
     const result = parse(multipleRecords);
-    expect(result).toMatchFileSnapshot("./result/multiple.json");
+    expect(result).toMatchFileSnapshot("./result/multiple.txt");
   });
 
   test("parses empty file", () => {
@@ -31,7 +31,6 @@ describe("full files", () => {
     expect(result).toEqual({ type: "file", records: [] });
   });
 
-  // TODO
   test("parses file that has all records with no entries", () => {
     const result = parse(noEntries);
     expect(result).toEqual({
@@ -39,14 +38,14 @@ describe("full files", () => {
       records: [
         {
           type: "record",
-          date: "2024-04-29",
+          date: new Date(2024, 3, 29),
           shouldTotal: null,
           summary: null,
           entries: [],
         },
         {
           type: "record",
-          date: "2024-04-30",
+          date: new Date(2024, 3, 30),
           shouldTotal: null,
           summary: "Cool day I think",
           entries: [],
@@ -62,7 +61,7 @@ describe("full files", () => {
       records: [
         {
           type: "record",
-          date: "2024-04-28",
+          date: new Date(2024, 3, 28),
           shouldTotal: null,
           summary: null,
           entries: [
@@ -75,14 +74,14 @@ describe("full files", () => {
         },
         {
           type: "record",
-          date: "2024-04-29",
+          date: new Date(2024, 3, 29),
           shouldTotal: null,
           summary: null,
           entries: [],
         },
         {
           type: "record",
-          date: "2024-04-30",
+          date: new Date(2024, 3, 30),
           shouldTotal: null,
           summary: "Cool day I think",
           entries: [],
@@ -93,30 +92,32 @@ describe("full files", () => {
 
   test("parses file with records on the same day", () => {
     const result = parse(sameDay);
-    expect(result).toMatchFileSnapshot("./result/same-day.json");
+    expect(result).toMatchFileSnapshot("./result/same-day.txt");
   });
 });
 
 describe("date", () => {
   test("with recommended dashes", () => {
     const result = parse("2024-04-29", "date");
-    expect(result).toEqual("2024-04-29");
+    expect(result).toEqual(new Date(2024, 3, 29));
   });
 
   test("with slashes", () => {
     const result = parse("2024/04/29", "date");
-    expect(result).toEqual("2024/04/29");
+    expect(result).toEqual(new Date(2024, 3, 29));
   });
 
   test("doesn't allow mixed dividers", () => {
     expect(() => parse("2024-04/29", "date")).toThrow();
   });
 
-  test.skip("only allows valid calendar dates");
+  test("only allows valid calendar dates", () => {
+    expect(() => parse("2024-04-31", "date")).toThrowError("Invalid date");
+    expect(() => parse("2020-13-01", "date")).toThrowError("Invalid date");
+  });
 });
 
 describe("durations", () => {
-  // TODO: actual value parsing
   describe("minutes", () => {
     test("implicit positive", () => {
       const result = parse("45m", "duration");
