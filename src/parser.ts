@@ -210,16 +210,27 @@ const mapping: KlogActionDict<KlogNode> = {
   },
 };
 
-// rename to ast
-// TODO: map of rules to node types
-const parse = (source: string, rule?: string): KlogNode => {
+interface RuleToNode {
+  file: FileNode;
+  record: RecordNode;
+  date: Date;
+  entry: EntryNode;
+  timeRange: TimeRangeNode;
+  time: TimeNode;
+  duration: DurationNode;
+}
+
+interface ParseAST {
+  (source: string): FileNode;
+  <T extends keyof RuleToNode>(source: string, rule: T): RuleToNode[T];
+}
+
+export const parseAST = ((source, rule) => {
   if ((!source.trim() && !rule) || rule === "file")
     return { type: "file", records: [] };
 
   const match = grammar.match(source, rule);
 
-  if (match.succeeded()) return toAST(match, mapping) as KlogNode;
+  if (match.succeeded()) return toAST(match, mapping);
   else throw new Error(match.message);
-};
-
-export default parse;
+}) as ParseAST;
