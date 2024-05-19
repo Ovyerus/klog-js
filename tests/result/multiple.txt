@@ -10,13 +10,13 @@
             "end": {
               "shift": null,
               "type": "time",
-              "value": "17:00",
+              "value": 1020,
             },
             "open": false,
             "start": {
               "shift": null,
               "type": "time",
-              "value": "8:30",
+              "value": 510,
             },
             "type": "timeRange",
           },
@@ -69,13 +69,13 @@
             "end": {
               "shift": null,
               "type": "time",
-              "value": "11:15",
+              "value": 675,
             },
             "open": false,
             "start": {
               "shift": null,
               "type": "time",
-              "value": "8:30",
+              "value": 510,
             },
             "type": "timeRange",
           },
@@ -87,13 +87,13 @@
             "end": {
               "shift": null,
               "type": "time",
-              "value": "12:20",
+              "value": 740,
             },
             "open": false,
             "start": {
               "shift": null,
               "type": "time",
-              "value": "11:15",
+              "value": 675,
             },
             "type": "timeRange",
           },

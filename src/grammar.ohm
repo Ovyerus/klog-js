@@ -42,9 +42,10 @@ Klog {
   forwardsShiftedTime = time ">"
 
   // am/pm is optional for now, otherwise times like `1:45` break weirdly.
-  time = ("1" "0".."2" | "0"? digit) ":" "0".."5" digit ("am" | "pm")? -- twelveHour
-       | ("2" "0".."4" | "0".."1"? digit) ":" "0".."5" digit -- twentyFourHour
+  time = ("2" "0".."4" | "0".."1"? digit) ":" "0".."5" digit ~period -- twentyFourHour
+       | ("1" "0".."2" | "0"? digit) ":" "0".."5" digit period? -- twelveHour
 
+  period = "am" | "pm"
   eol = newline | end
   newline = "\n" | "\r\n"
   indent = (" ") (" ") (" ")? (" ")? -- spaces

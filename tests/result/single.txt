@@ -10,13 +10,13 @@
             "end": {
               "shift": null,
               "type": "time",
-              "value": "17:00",
+              "value": 1020,
             },
             "open": false,
             "start": {
               "shift": null,
               "type": "time",
-              "value": "8:30",
+              "value": 510,
             },
             "type": "timeRange",
           },

@@ -7,7 +7,7 @@ export interface FileNode {
 
 export interface RecordNode {
   type: "record";
-  date: string;
+  date: Date;
   shouldTotal: string | null;
   summary: string | null;
   entries: EntryNode[];
@@ -29,7 +29,7 @@ export interface TimeRangeNode {
 export interface TimeNode {
   type: "time";
   shift: "yesterday" | "tomorrow" | null;
-  value: string;
+  value: number;
 }
 
 export interface DurationNode {

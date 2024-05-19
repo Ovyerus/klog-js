@@ -154,15 +154,23 @@ const mapping: KlogActionDict<KlogNode> = {
     value: value.toAST(mapping),
   }),
 
-  backwardsShiftedTime: (_, time): TimeNode => ({
-    ...time.toAST(mapping),
-    shift: "yesterday",
-  }),
+  backwardsShiftedTime: (_, $time): TimeNode => {
+    const { type, value } = $time.toAST(mapping) as TimeNode;
+    return {
+      type,
+      value: value - 1440, // Treats backward shift as a continuation of the current day (but negatives).
+      shift: "yesterday",
+    };
+  },
 
-  forwardsShiftedTime: (time, _): TimeNode => ({
-    ...time.toAST(mapping),
-    shift: "tomorrow",
-  }),
+  forwardsShiftedTime: ($time, _): TimeNode => {
+    const { type, value } = $time.toAST(mapping) as TimeNode;
+    return {
+      type,
+      value: value + 1440, // Treats forward shift as a continuation of the current day.
+      shift: "tomorrow",
+    };
+  },
 
   date(y1, y2, y3, y4, sep1, m1, m2, sep2, d1, d2): any {
     const dateString = [y1, y2, y3, y4, sep1, m1, m2, sep2, d1, d2]
@@ -174,8 +182,35 @@ const mapping: KlogActionDict<KlogNode> = {
     if (!isValid(date)) throw new Error(`Invalid date ${dateString}`);
     return date;
   },
+
+  time_twelveHour(h1, h2, _, m1, m2, $period) {
+    const period = $period.toAST(mapping)?.toLowerCase() || "am";
+    let hour = parseInt([h1, h2].map((x) => x.toAST(mapping)).join(""), 10);
+
+    // Convert to 24 hour
+    if (period === "am" && hour === 12) hour = 0;
+    else if (period === "pm" && hour !== 12) hour += 12;
+
+    const minutes =
+      parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10) +
+      // Get absolute minute of the day
+      hour * 60;
+
+    return minutes as any;
+  },
+
+  time_twentyFourHour(h1, h2, _, m1, m2) {
+    const hour = parseInt([h1, h2].map((x) => x.toAST(mapping)).join(""), 10);
+    const minutes =
+      parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10) +
+      // Get absolute minute of the day
+      hour * 60;
+
+    return minutes as any;
+  },
 };
 
+// rename to ast
 // TODO: map of rules to node types
 const parse = (source: string, rule?: string): KlogNode => {
   if ((!source.trim() && !rule) || rule === "file")

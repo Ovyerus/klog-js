@@ -261,30 +261,39 @@ describe("times", () => {
   describe("12 hour", () => {
     test("implicit AM time", () => {
       const result = parse("10:30", "time");
-      expect(result).toEqual({ type: "time", value: "10:30", shift: null });
+      expect(result).toEqual({ type: "time", value: 630, shift: null });
     });
 
     test("parses a variety of AM/PM times correctly", () => {
       expect(parse("10:25am", "time")).toEqual({
         type: "time",
-        value: "10:25am",
+        value: 625,
         shift: null,
       });
       expect(parse("07:12am", "time")).toEqual({
         type: "time",
-        value: "07:12am",
+        value: 432,
         shift: null,
       });
       expect(parse("11:23pm", "time")).toEqual({
         type: "time",
-        value: "11:23pm",
+        value: 1403,
         shift: null,
       });
       expect(parse("6:51pm", "time")).toEqual({
         type: "time",
-        value: "6:51pm",
+        value: 1131,
         shift: null,
       });
+    });
+
+    test("parses both 12 o'clocks correctly", () => {
+      expect
+        .soft(parse("12:00am", "time"))
+        .toEqual({ type: "time", value: 0, shift: null });
+      expect
+        .soft(parse("12:00pm", "time"))
+        .toEqual({ type: "time", value: 720, shift: null });
     });
 
     test("doesn't parse >12 hours", () => {
@@ -301,14 +310,24 @@ describe("times", () => {
     test("parses valid times correctly", () => {
       expect(parse("18:11", "time")).toEqual({
         type: "time",
-        value: "18:11",
+        value: 1091,
         shift: null,
       });
       expect(parse("23:30", "time")).toEqual({
         type: "time",
-        value: "23:30",
+        value: 1410,
         shift: null,
       });
+    });
+
+    // Holdover from 12-hour time first
+    test("treats 12 o'clock correctly", () => {
+      expect
+        .soft(parse("12:00", "time"))
+        .toEqual({ type: "time", value: 720, shift: null });
+      expect
+        .soft(parse("12:31", "time"))
+        .toEqual({ type: "time", value: 751, shift: null });
     });
 
     test("doesn't parse invalid times", () => {
@@ -324,15 +343,15 @@ describe("time ranges", () => {
       expect(parse("9:30am - 18:11", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: "9:30am" },
-        end: { type: "time", shift: null, value: "18:11" },
+        start: { type: "time", shift: null, value: 570 },
+        end: { type: "time", shift: null, value: 1091 },
       });
 
       expect(parse("21:42   -      11:00pm", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: "21:42" },
-        end: { type: "time", shift: null, value: "11:00pm" },
+        start: { type: "time", shift: null, value: 1302 },
+        end: { type: "time", shift: null, value: 1380 },
       });
     });
 
@@ -341,8 +360,8 @@ describe("time ranges", () => {
       expect(result).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: "9:21am" },
-        end: { type: "time", shift: null, value: "1:00pm" },
+        start: { type: "time", shift: null, value: 561 },
+        end: { type: "time", shift: null, value: 780 },
       });
     });
 
@@ -351,8 +370,8 @@ describe("time ranges", () => {
       expect(result).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: "13:21" },
-        end: { type: "time", shift: null, value: "18:00" },
+        start: { type: "time", shift: null, value: 801 },
+        end: { type: "time", shift: null, value: 1080 },
       });
     });
   });
@@ -365,7 +384,7 @@ describe("time ranges", () => {
         start: {
           type: "time",
           shift: null,
-          value: "2:00am",
+          value: 120,
         },
       };
 
@@ -389,15 +408,15 @@ describe("time ranges", () => {
       expect(parse("13:00 - 3:11am>", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: "13:00" },
-        end: { type: "time", shift: "tomorrow", value: "3:11am" },
+        start: { type: "time", shift: null, value: 780 },
+        end: { type: "time", shift: "tomorrow", value: 1631 },
       });
 
       expect(parse("11:21pm - 13:11>", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: "11:21pm" },
-        end: { type: "time", shift: "tomorrow", value: "13:11" },
+        start: { type: "time", shift: null, value: 1401 },
+        end: { type: "time", shift: "tomorrow", value: 2231 },
       });
     });
 
@@ -405,14 +424,14 @@ describe("time ranges", () => {
       expect(parse("<23:30 - 8:00", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: "yesterday", value: "23:30" },
-        end: { type: "time", shift: null, value: "8:00" },
+        start: { type: "time", shift: "yesterday", value: -30 },
+        end: { type: "time", shift: null, value: 480 },
       });
 
       expect(parse("<21:00 - ?", "timeRange")).toEqual({
         type: "timeRange",
         open: true,
-        start: { type: "time", shift: "yesterday", value: "21:00" },
+        start: { type: "time", shift: "yesterday", value: -180 },
       });
     });
 
@@ -420,8 +439,8 @@ describe("time ranges", () => {
       expect(parse("<23:30 - 1:30>", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: "yesterday", value: "23:30" },
-        end: { type: "time", shift: "tomorrow", value: "1:30" },
+        start: { type: "time", shift: "yesterday", value: -30 },
+        end: { type: "time", shift: "tomorrow", value: 1530 },
       });
     });
   });
@@ -464,8 +483,8 @@ describe("entries", () => {
         value: {
           type: "timeRange",
           open: false,
-          start: { type: "time", shift: null, value: "9:30" },
-          end: { type: "time", shift: null, value: "17:11" },
+          start: { type: "time", shift: null, value: 570 },
+          end: { type: "time", shift: null, value: 1031 },
         },
       });
       // 3-space indent
@@ -475,7 +494,7 @@ describe("entries", () => {
         value: {
           type: "timeRange",
           open: true,
-          start: { type: "time", shift: "yesterday", value: "11:00pm" },
+          start: { type: "time", shift: "yesterday", value: -60 },
         },
       });
       // 2-space indent
@@ -485,8 +504,8 @@ describe("entries", () => {
         value: {
           type: "timeRange",
           open: false,
-          start: { type: "time", shift: null, value: "22:12" },
-          end: { type: "time", shift: "tomorrow", value: "4:11am" },
+          start: { type: "time", shift: null, value: 1332 },
+          end: { type: "time", shift: "tomorrow", value: 1691 },
         },
       });
       expect(parse("\t2:11pm - 3:21pm", "entry")).toEqual({
@@ -495,8 +514,8 @@ describe("entries", () => {
         value: {
           type: "timeRange",
           open: false,
-          start: { type: "time", shift: null, value: "2:11pm" },
-          end: { type: "time", shift: null, value: "3:21pm" },
+          start: { type: "time", shift: null, value: 851 },
+          end: { type: "time", shift: null, value: 921 },
         },
       });
     });
