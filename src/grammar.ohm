@@ -14,7 +14,8 @@ Klog {
 
   entry = indent (duration | timeRange) entrySummary?
 
-  // TODO: parsing tags in summaries
+  // TODO: probably see if we can simplify summary parsing, double check what Klog does
+
   recordSummary = summaryChar (~(any newline) any)* (~newline any) newline recordSummary -- wrap
                  | summaryChar (~(any eol) any)* (~eol any) &eol -- single
   summaryChar = ~(blankCharacter | newline) any

@@ -8,15 +8,20 @@
           "type": "entry",
           "value": {
             "end": {
-              "shift": null,
+              "format": "24h",
+              "hour": 17,
+              "minute": 0,
+              "shift": 0,
               "type": "time",
-              "value": 1020,
             },
+            "format": 0,
             "open": false,
             "start": {
-              "shift": null,
+              "format": "24h",
+              "hour": 8,
+              "minute": 30,
+              "shift": 0,
               "type": "time",
-              "value": 510,
             },
             "type": "timeRange",
           },
@@ -25,11 +30,9 @@
           "summary": "Lunch break",
           "type": "entry",
           "value": {
+            "sign": "-",
             "type": "duration",
-            "value": {
-              "hours": 0,
-              "minutes": -45,
-            },
+            "value": -45,
           },
         },
       ],

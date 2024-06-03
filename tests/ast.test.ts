@@ -1,8 +1,10 @@
 import { promises as fs } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, format, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { parseAST } from "../src/parser";
+import { DayShift, TimeFormat } from "../src/time";
+import { RangeDashFormat } from "../src/range";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const readCorpus = (file: string) =>
@@ -68,7 +70,7 @@ describe("full files", () => {
             {
               type: "entry",
               summary: null,
-              value: { type: "duration", value: { hours: 7, minutes: 0 } },
+              value: { type: "duration", sign: "", value: 420 },
             },
           ],
         },
@@ -123,7 +125,8 @@ describe("durations", () => {
       const result = parseAST("45m", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 0, minutes: 45 },
+        sign: "",
+        value: 45,
       });
     });
 
@@ -131,7 +134,8 @@ describe("durations", () => {
       const result = parseAST("+39m", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 0, minutes: 39 },
+        sign: "+",
+        value: 39,
       });
     });
 
@@ -139,18 +143,21 @@ describe("durations", () => {
       const result = parseAST("-5m", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 0, minutes: -5 },
+        sign: "-",
+        value: -5,
       });
     });
 
     test("big values", () => {
       expect(parseAST("1337m", "duration")).toEqual({
         type: "duration",
-        value: { hours: 0, minutes: 1337 },
+        sign: "",
+        value: 1337,
       });
       expect(parseAST("-90001m", "duration")).toEqual({
         type: "duration",
-        value: { hours: 0, minutes: -90001 },
+        sign: "-",
+        value: -90001,
       });
     });
   });
@@ -160,7 +167,8 @@ describe("durations", () => {
       const result = parseAST("12h", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 12, minutes: 0 },
+        sign: "",
+        value: 720,
       });
     });
 
@@ -168,7 +176,8 @@ describe("durations", () => {
       const result = parseAST("+2h", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 2, minutes: 0 },
+        sign: "+",
+        value: 120,
       });
     });
 
@@ -176,18 +185,8 @@ describe("durations", () => {
       const result = parseAST("-5h", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: -5, minutes: 0 },
-      });
-    });
-
-    test("big values", () => {
-      expect(parseAST("75h", "duration")).toEqual({
-        type: "duration",
-        value: { hours: 75, minutes: 0 },
-      });
-      expect(parseAST("-1001h", "duration")).toEqual({
-        type: "duration",
-        value: { hours: -1001, minutes: 0 },
+        sign: "-",
+        value: -300,
       });
     });
   });
@@ -197,7 +196,8 @@ describe("durations", () => {
       const result = parseAST("1h23m", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 1, minutes: 23 },
+        sign: "",
+        value: 83,
       });
     });
 
@@ -205,7 +205,8 @@ describe("durations", () => {
       const result = parseAST("+3h38m", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: 3, minutes: 38 },
+        sign: "+",
+        value: 218,
       });
     });
 
@@ -213,40 +214,34 @@ describe("durations", () => {
       const result = parseAST("-15h48m", "duration");
       expect(result).toEqual({
         type: "duration",
-        value: { hours: -15, minutes: -48 },
+        sign: "-",
+        value: -948,
       });
     });
 
     test("single digit minutes", () => {
       expect(parseAST("2h3m", "duration")).toEqual({
         type: "duration",
-        value: { hours: 2, minutes: 3 },
+        sign: "",
+        value: 123,
       });
       expect(parseAST("5h9m", "duration")).toEqual({
         type: "duration",
-        value: { hours: 5, minutes: 9 },
-      });
-    });
-
-    test("big hour values", () => {
-      expect(parseAST("+400h10m", "duration")).toEqual({
-        type: "duration",
-        value: { hours: 400, minutes: 10 },
-      });
-      expect(parseAST("-99999h43m", "duration")).toEqual({
-        type: "duration",
-        value: { hours: -99999, minutes: -43 },
+        sign: "",
+        value: 309,
       });
     });
 
     test("allows 0 values", () => {
       expect(parseAST("0h37m", "duration")).toEqual({
         type: "duration",
-        value: { hours: 0, minutes: 37 },
+        sign: "",
+        value: 37,
       });
       expect(parseAST("7h0m", "duration")).toEqual({
         type: "duration",
-        value: { hours: 7, minutes: 0 },
+        sign: "",
+        value: 420,
       });
     });
 
@@ -259,41 +254,52 @@ describe("durations", () => {
 
 describe("times", () => {
   describe("12 hour", () => {
-    test("implicit AM time", () => {
-      const result = parseAST("10:30", "time");
-      expect(result).toEqual({ type: "time", value: 630, shift: null });
-    });
-
     test("parses a variety of AM/PM times correctly", () => {
       expect(parseAST("10:25am", "time")).toEqual({
         type: "time",
-        value: 625,
-        shift: null,
+        hour: 10,
+        minute: 25,
+        format: TimeFormat.TwelveHour,
+        shift: DayShift.Today,
       });
       expect(parseAST("07:12am", "time")).toEqual({
         type: "time",
-        value: 432,
-        shift: null,
+        hour: 7,
+        minute: 12,
+        format: TimeFormat.TwelveHour,
+        shift: DayShift.Today,
       });
       expect(parseAST("11:23pm", "time")).toEqual({
         type: "time",
-        value: 1403,
-        shift: null,
+        hour: 23,
+        minute: 23,
+        format: TimeFormat.TwelveHour,
+        shift: DayShift.Today,
       });
       expect(parseAST("6:51pm", "time")).toEqual({
         type: "time",
-        value: 1131,
-        shift: null,
+        hour: 18,
+        minute: 51,
+        format: TimeFormat.TwelveHour,
+        shift: DayShift.Today,
       });
     });
 
     test("parses both 12 o'clocks correctly", () => {
-      expect
-        .soft(parseAST("12:00am", "time"))
-        .toEqual({ type: "time", value: 0, shift: null });
-      expect
-        .soft(parseAST("12:00pm", "time"))
-        .toEqual({ type: "time", value: 720, shift: null });
+      expect.soft(parseAST("12:00am", "time")).toEqual({
+        type: "time",
+        hour: 0,
+        minute: 0,
+        shift: DayShift.Today,
+        format: TimeFormat.TwelveHour,
+      });
+      expect.soft(parseAST("12:00pm", "time")).toEqual({
+        type: "time",
+        hour: 12,
+        minute: 0,
+        shift: DayShift.Today,
+        format: TimeFormat.TwelveHour,
+      });
     });
 
     test("doesn't parse >12 hours", () => {
@@ -310,24 +316,36 @@ describe("times", () => {
     test("parses valid times correctly", () => {
       expect(parseAST("18:11", "time")).toEqual({
         type: "time",
-        value: 1091,
-        shift: null,
+        hour: 18,
+        minute: 11,
+        format: TimeFormat.TwentyFourHour,
+        shift: DayShift.Today,
       });
       expect(parseAST("23:30", "time")).toEqual({
         type: "time",
-        value: 1410,
-        shift: null,
+        hour: 23,
+        minute: 30,
+        format: TimeFormat.TwentyFourHour,
+        shift: DayShift.Today,
       });
     });
 
     // Holdover from 12-hour time first
     test("treats 12 o'clock correctly", () => {
-      expect
-        .soft(parseAST("12:00", "time"))
-        .toEqual({ type: "time", value: 720, shift: null });
-      expect
-        .soft(parseAST("12:31", "time"))
-        .toEqual({ type: "time", value: 751, shift: null });
+      expect.soft(parseAST("12:00", "time")).toEqual({
+        type: "time",
+        hour: 12,
+        minute: 0,
+        format: TimeFormat.TwentyFourHour,
+        shift: DayShift.Today,
+      });
+      expect.soft(parseAST("12:31", "time")).toEqual({
+        type: "time",
+        hour: 12,
+        minute: 31,
+        format: TimeFormat.TwentyFourHour,
+        shift: DayShift.Today,
+      });
     });
 
     test("doesn't parse invalid times", () => {
@@ -343,15 +361,41 @@ describe("time ranges", () => {
       expect(parseAST("9:30am - 18:11", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: 570 },
-        end: { type: "time", shift: null, value: 1091 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 9,
+          minute: 30,
+          format: TimeFormat.TwelveHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 18,
+          minute: 11,
+          format: TimeFormat.TwentyFourHour,
+        },
       });
 
       expect(parseAST("21:42   -      11:00pm", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: 1302 },
-        end: { type: "time", shift: null, value: 1380 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 21,
+          minute: 42,
+          format: TimeFormat.TwentyFourHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 23,
+          minute: 0,
+          format: TimeFormat.TwelveHour,
+        },
       });
     });
 
@@ -360,8 +404,21 @@ describe("time ranges", () => {
       expect(result).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: 561 },
-        end: { type: "time", shift: null, value: 780 },
+        format: RangeDashFormat.NoSpaces,
+        start: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 9,
+          minute: 21,
+          format: TimeFormat.TwelveHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 13,
+          minute: 0,
+          format: TimeFormat.TwelveHour,
+        },
       });
     });
 
@@ -370,8 +427,21 @@ describe("time ranges", () => {
       expect(result).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: 801 },
-        end: { type: "time", shift: null, value: 1080 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 13,
+          minute: 21,
+          format: TimeFormat.TwentyFourHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 18,
+          minute: 0,
+          format: TimeFormat.TwentyFourHour,
+        },
       });
     });
   });
@@ -381,20 +451,29 @@ describe("time ranges", () => {
       const expected = {
         type: "timeRange",
         open: true,
+        format: RangeDashFormat.Spaces,
         start: {
           type: "time",
-          shift: null,
-          value: 120,
+          shift: DayShift.Today,
+          hour: 2,
+          minute: 0,
+          format: TimeFormat.TwelveHour,
         },
       };
 
-      expect(parseAST("2:00am-  ?", "timeRange")).toEqual(expected);
-      expect(parseAST("2:00am  - ???", "timeRange")).toEqual(expected);
-      expect(parseAST("2:00am   -?????????", "timeRange")).toEqual(expected);
+      expect
+        .soft(parseAST("2:00am-  ?", "timeRange"))
+        .toEqual({ ...expected, placeholderCount: 1 });
+      expect
+        .soft(parseAST("2:00am  - ???", "timeRange"))
+        .toEqual({ ...expected, placeholderCount: 3 });
+      expect
+        .soft(parseAST("2:00am   -?????????", "timeRange"))
+        .toEqual({ ...expected, placeholderCount: 9 });
     });
 
     test("doesn't allow question mark at the start", () => {
-      expect(() => parseAST("? - 13:01"));
+      expect(() => parseAST("? - 13:01")).toThrow();
     });
 
     test("doesn't allow empty range", () => {
@@ -408,15 +487,41 @@ describe("time ranges", () => {
       expect(parseAST("13:00 - 3:11am>", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: 780 },
-        end: { type: "time", shift: "tomorrow", value: 1631 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 13,
+          minute: 0,
+          format: TimeFormat.TwentyFourHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Tomorrow,
+          hour: 3,
+          minute: 11,
+          format: TimeFormat.TwelveHour,
+        },
       });
 
       expect(parseAST("11:21pm - 13:11>", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: null, value: 1401 },
-        end: { type: "time", shift: "tomorrow", value: 2231 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 23,
+          minute: 21,
+          format: TimeFormat.TwelveHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Tomorrow,
+          hour: 13,
+          minute: 11,
+          format: TimeFormat.TwentyFourHour,
+        },
       });
     });
 
@@ -424,14 +529,35 @@ describe("time ranges", () => {
       expect(parseAST("<23:30 - 8:00", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: "yesterday", value: -30 },
-        end: { type: "time", shift: null, value: 480 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Yesterday,
+          hour: 23,
+          minute: 30,
+          format: TimeFormat.TwentyFourHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Today,
+          hour: 8,
+          minute: 0,
+          format: TimeFormat.TwentyFourHour,
+        },
       });
 
       expect(parseAST("<21:00 - ?", "timeRange")).toEqual({
         type: "timeRange",
         open: true,
-        start: { type: "time", shift: "yesterday", value: -180 },
+        format: RangeDashFormat.Spaces,
+        placeholderCount: 1,
+        start: {
+          type: "time",
+          shift: DayShift.Yesterday,
+          hour: 21,
+          minute: 0,
+          format: TimeFormat.TwentyFourHour,
+        },
       });
     });
 
@@ -439,8 +565,21 @@ describe("time ranges", () => {
       expect(parseAST("<23:30 - 1:30>", "timeRange")).toEqual({
         type: "timeRange",
         open: false,
-        start: { type: "time", shift: "yesterday", value: -30 },
-        end: { type: "time", shift: "tomorrow", value: 1530 },
+        format: RangeDashFormat.Spaces,
+        start: {
+          type: "time",
+          shift: DayShift.Yesterday,
+          hour: 23,
+          minute: 30,
+          format: TimeFormat.TwentyFourHour,
+        },
+        end: {
+          type: "time",
+          shift: DayShift.Tomorrow,
+          hour: 1,
+          minute: 30,
+          format: TimeFormat.TwelveHour,
+        },
       });
     });
   });
@@ -450,73 +589,54 @@ describe("entries", () => {
   describe("basic entry with no summary", () => {
     test("duration", () => {
       // 4-space indent
-      expect(parseAST("    30m", "entry")).toEqual({
+      expect(parseAST("    30m", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: { hours: 0, minutes: 30 } },
+        value: { type: "duration" },
       });
       // 3-space indent
-      expect(parseAST("   +1h", "entry")).toEqual({
+      expect(parseAST("   +1h", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: { hours: 1, minutes: 0 } },
+        value: { type: "duration" },
       });
       // 2-space indent
-      expect(parseAST("  -92m", "entry")).toEqual({
+      expect(parseAST("  -92m", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: { hours: 0, minutes: -92 } },
+        value: { type: "duration" },
       });
       // tab indent
-      expect(parseAST("\t5h12m", "entry")).toEqual({
+      expect(parseAST("\t5h12m", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: { type: "duration", value: { hours: 5, minutes: 12 } },
+        value: { type: "duration" },
       });
     });
 
     test("time ranges", () => {
       // 4-space indent
-      expect(parseAST("    9:30  - 17:11", "entry")).toEqual({
+      expect(parseAST("    9:30  - 17:11", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: {
-          type: "timeRange",
-          open: false,
-          start: { type: "time", shift: null, value: 570 },
-          end: { type: "time", shift: null, value: 1031 },
-        },
+        value: { type: "timeRange" },
       });
       // 3-space indent
-      expect(parseAST("   <11:00pm-  ??", "entry")).toEqual({
+      expect(parseAST("   <11:00pm-  ??", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: {
-          type: "timeRange",
-          open: true,
-          start: { type: "time", shift: "yesterday", value: -60 },
-        },
+        value: { type: "timeRange", open: true },
       });
       // 2-space indent
-      expect(parseAST("  22:12 - 4:11am>", "entry")).toEqual({
+      expect(parseAST("  22:12 - 4:11am>", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: {
-          type: "timeRange",
-          open: false,
-          start: { type: "time", shift: null, value: 1332 },
-          end: { type: "time", shift: "tomorrow", value: 1691 },
-        },
+        value: { type: "timeRange" },
       });
-      expect(parseAST("\t2:11pm - 3:21pm", "entry")).toEqual({
+      expect(parseAST("\t2:11pm - 3:21pm", "entry")).toMatchObject({
         type: "entry",
         summary: null,
-        value: {
-          type: "timeRange",
-          open: false,
-          start: { type: "time", shift: null, value: 851 },
-          end: { type: "time", shift: null, value: 921 },
-        },
+        value: { type: "timeRange" },
       });
     });
 

@@ -1,4 +1,7 @@
-import type { Duration } from "date-fns";
+import { RangeDashFormat } from "./range.js";
+import { DayShift, TimeFormat } from "./time.js";
+
+export type Sign = "" | "+" | "-";
 
 export interface FileNode {
   type: "file";
@@ -8,7 +11,7 @@ export interface FileNode {
 export interface RecordNode {
   type: "record";
   date: Date;
-  shouldTotal: string | null;
+  shouldTotal: DurationNode | null;
   summary: string | null;
   entries: EntryNode[];
 }
@@ -19,22 +22,36 @@ export interface EntryNode {
   value: TimeRangeNode | DurationNode;
 }
 
-export interface TimeRangeNode {
+export interface OpenTimeRangeNode {
   type: "timeRange";
-  open: boolean;
+  open: true;
+  placeholderCount: number;
+  format: RangeDashFormat;
   start: TimeNode;
-  end?: TimeNode;
 }
+
+export interface ClosedTimeRangeNode {
+  type: "timeRange";
+  open: false;
+  format: RangeDashFormat;
+  start: TimeNode;
+  end: TimeNode;
+}
+
+export type TimeRangeNode = OpenTimeRangeNode | ClosedTimeRangeNode;
 
 export interface TimeNode {
   type: "time";
-  shift: "yesterday" | "tomorrow" | null;
-  value: number;
+  shift: DayShift;
+  hour: number;
+  minute: number;
+  format: TimeFormat;
 }
 
 export interface DurationNode {
   type: "duration";
-  value: Duration;
+  value: number;
+  sign: Sign;
 }
 
 export type KlogNode =

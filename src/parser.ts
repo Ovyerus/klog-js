@@ -1,17 +1,20 @@
 import { toAST } from "ohm-js/extras";
 import grammar, { KlogActionDict } from "./grammar.ohm-bundle.js";
 import type {
+  ClosedTimeRangeNode,
   DurationNode,
   EntryNode,
   FileNode,
   KlogNode,
+  OpenTimeRangeNode,
   RecordNode,
   TimeNode,
   TimeRangeNode,
 } from "./types.js";
-import { isValid, parseISO, type Duration } from "date-fns";
-
-// TODO: parse and validate times
+import { isValid, parseISO } from "date-fns";
+import { DayShift, TimeFormat } from "./time.js";
+import { RangeDashFormat } from "./range.js";
+import { Record } from "./record.js";
 
 // TODO: enforcing consistent indents & newlines
 const mapping: KlogActionDict<KlogNode> = {
@@ -93,82 +96,103 @@ const mapping: KlogActionDict<KlogNode> = {
   entrySummary: (value) => value.toAST(mapping).trim(),
   timeRange: (range) => range.toAST(mapping),
 
-  timeRange_open: (start, _, __, ___, ____): TimeRangeNode => ({
-    type: "timeRange",
-    open: true,
-    start: start.toAST(mapping),
-  }),
-
-  timeRange_closed: (start, _, __, ___, end): TimeRangeNode => ({
-    type: "timeRange",
-    open: false,
-    start: start.toAST(mapping),
-    end: end.toAST(mapping),
-  }),
-
-  duration: (value): DurationNode => ({
-    type: "duration",
-    value: value.toAST(mapping),
-  }),
-
-  duration_hour($sign, $value, _): any {
-    const sign = $sign.toAST(mapping) || "+";
-    const mul = sign === "-" ? -1 : 1;
-    const value = parseInt($value.toAST(mapping).join(""), 10);
+  timeRange_open: (
+    start,
+    spaceLeft,
+    __,
+    spaceRight,
+    placeholder
+  ): OpenTimeRangeNode => {
+    const hasSpaces = !!(
+      [spaceLeft, spaceRight].flatMap((n) => n.toAST(mapping)) as string[]
+    ).length;
 
     return {
-      hours: value * mul,
-      minutes: 0,
-    } as Duration;
+      type: "timeRange",
+      open: true,
+      placeholderCount: (placeholder.toAST(mapping) as string[]).length,
+      format: hasSpaces ? RangeDashFormat.Spaces : RangeDashFormat.NoSpaces,
+      start: start.toAST(mapping),
+    };
   },
 
-  duration_minute($sign, $value, _): any {
-    const sign = $sign.toAST(mapping) || "+";
-    const mul = sign === "-" ? -1 : 1;
-    const value = parseInt($value.toAST(mapping).join(""), 10);
+  timeRange_closed: (
+    start,
+    spaceLeft,
+    __,
+    spaceRight,
+    end
+  ): ClosedTimeRangeNode => {
+    const hasSpaces = !!(
+      [spaceLeft, spaceRight].flatMap((n) => n.toAST(mapping)) as string[]
+    ).length;
 
     return {
-      hours: 0,
-      minutes: value * mul,
-    } as Duration;
+      type: "timeRange",
+      open: false,
+      format: hasSpaces ? RangeDashFormat.Spaces : RangeDashFormat.NoSpaces,
+      start: start.toAST(mapping),
+      end: end.toAST(mapping),
+    };
   },
 
-  duration_hourMinute($sign, $hours, _, minute1, minute2, __): any {
-    const sign = $sign.toAST(mapping) || "+";
+  duration: (value) => value.toAST(mapping),
+
+  // TODO: how does klog do negatives
+  duration_hour($sign, $value, _): DurationNode {
+    const sign = $sign.toAST(mapping) || "";
+    const mul = sign === "-" ? -1 : 1;
+    const value = parseInt($value.toAST(mapping).join(""), 10) * 60 * mul;
+
+    return {
+      type: "duration",
+      value,
+      sign,
+    };
+  },
+
+  duration_minute($sign, $value, _): DurationNode {
+    const sign = $sign.toAST(mapping) || "";
+    const mul = sign === "-" ? -1 : 1;
+    const value = parseInt($value.toAST(mapping).join(""), 10) * mul;
+
+    return {
+      type: "duration",
+      value,
+      sign,
+    };
+  },
+
+  duration_hourMinute($sign, $hours, _, minute1, minute2, __): DurationNode {
+    const sign = $sign.toAST(mapping) || "";
     const mul = sign === "-" ? -1 : 1;
     const hours = parseInt($hours.toAST(mapping).join(""), 10);
     const minutes = parseInt(
       minute1.toAST(mapping) + minute2.toAST(mapping),
       10
     );
+    const value = (hours * 60 + minutes) * mul;
 
     return {
-      hours: hours * mul,
-      minutes: minutes * mul,
-    } as Duration;
+      type: "duration",
+      value,
+      sign,
+    };
   },
 
-  time: (value): TimeNode => ({
-    type: "time",
-    shift: null,
-    value: value.toAST(mapping),
-  }),
+  time: (value) => value.toAST(mapping),
 
   backwardsShiftedTime: (_, $time): TimeNode => {
-    const { type, value } = $time.toAST(mapping) as TimeNode;
     return {
-      type,
-      value: value - 1440, // Treats backward shift as a continuation of the current day (but negatives).
-      shift: "yesterday",
+      ...($time.toAST(mapping) as TimeNode),
+      shift: DayShift.Yesterday,
     };
   },
 
   forwardsShiftedTime: ($time, _): TimeNode => {
-    const { type, value } = $time.toAST(mapping) as TimeNode;
     return {
-      type,
-      value: value + 1440, // Treats forward shift as a continuation of the current day.
-      shift: "tomorrow",
+      ...($time.toAST(mapping) as TimeNode),
+      shift: DayShift.Tomorrow,
     };
   },
 
@@ -183,7 +207,7 @@ const mapping: KlogActionDict<KlogNode> = {
     return date;
   },
 
-  time_twelveHour(h1, h2, _, m1, m2, $period) {
+  time_twelveHour(h1, h2, _, m1, m2, $period): TimeNode {
     const period = $period.toAST(mapping)?.toLowerCase() || "am";
     let hour = parseInt([h1, h2].map((x) => x.toAST(mapping)).join(""), 10);
 
@@ -191,22 +215,28 @@ const mapping: KlogActionDict<KlogNode> = {
     if (period === "am" && hour === 12) hour = 0;
     else if (period === "pm" && hour !== 12) hour += 12;
 
-    const minutes =
-      parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10) +
-      // Get absolute minute of the day
-      hour * 60;
+    const minute = parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10);
 
-    return minutes as any;
+    return {
+      type: "time",
+      hour,
+      minute,
+      shift: DayShift.Today,
+      format: TimeFormat.TwelveHour,
+    };
   },
 
-  time_twentyFourHour(h1, h2, _, m1, m2) {
+  time_twentyFourHour(h1, h2, _, m1, m2): TimeNode {
     const hour = parseInt([h1, h2].map((x) => x.toAST(mapping)).join(""), 10);
-    const minutes =
-      parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10) +
-      // Get absolute minute of the day
-      hour * 60;
+    const minute = parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10);
 
-    return minutes as any;
+    return {
+      type: "time",
+      hour,
+      minute,
+      shift: DayShift.Today,
+      format: TimeFormat.TwentyFourHour,
+    };
   },
 };
 
@@ -234,3 +264,8 @@ export const parseAST = ((source, rule) => {
   if (match.succeeded()) return toAST(match, mapping);
   else throw new Error(match.message);
 }) as ParseAST;
+
+export const parse = (source: string) => {
+  const nodes = parseAST(source);
+  return nodes.records.map(Record.fromAST);
+};
