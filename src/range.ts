@@ -1,4 +1,4 @@
-import { KlogDuration } from "./duration.js";
+import { Duration } from "./duration.js";
 import { Time } from "./time.js";
 import { TimeRangeNode } from "./types.js";
 
@@ -60,7 +60,7 @@ export class Range {
   }
 
   toDuration() {
-    return KlogDuration.fromMinutes(this.toMinutes());
+    return Duration.fromMinutes(this.toMinutes());
   }
 
   toMinutes() {

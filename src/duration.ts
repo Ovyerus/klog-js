@@ -9,7 +9,7 @@ export interface DurationOptions {
   zeroSign?: Sign;
 }
 
-export class KlogDuration {
+export class Duration {
   #value: number;
   explicitPositive: boolean;
   zeroSign: Sign;
@@ -58,11 +58,11 @@ export class KlogDuration {
   }
 
   add(other: this) {
-    return KlogDuration.fromMinutes(this.#value + other.#value, this.#options);
+    return Duration.fromMinutes(this.#value + other.#value, this.#options);
   }
 
   subtract(other: this) {
-    return KlogDuration.fromMinutes(this.#value - other.#value, this.#options);
+    return Duration.fromMinutes(this.#value - other.#value, this.#options);
   }
 
   equals(other: this) {

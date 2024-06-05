@@ -1,4 +1,4 @@
-import { KlogDuration } from "./duration.js";
+import { Duration } from "./duration.js";
 import { TimeNode } from "./types.js";
 
 export enum TimeFormat {
@@ -90,7 +90,7 @@ export class Time {
       hour += 24;
     }
 
-    return new KlogDuration(hour, minute);
+    return new Duration(hour, minute);
   }
 
   toMinutesSinceMidnight() {

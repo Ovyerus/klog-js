@@ -2,12 +2,12 @@ import { describe, expect, test } from "vitest";
 import { Entry, Indentation } from "../src/entry";
 import { Range } from "../src/range";
 import { Time } from "../src/time";
-import { KlogDuration } from "../src/duration";
+import { Duration } from "../src/duration";
 import { Summary } from "../src/summary";
 
 const areDurationsEqual = (a: unknown, b: unknown) => {
-  const aIsDuration = a instanceof KlogDuration;
-  const bIsDuration = b instanceof KlogDuration;
+  const aIsDuration = a instanceof Duration;
+  const bIsDuration = b instanceof Duration;
 
   if (aIsDuration && bIsDuration) return a.equals(b);
   else if (aIsDuration === bIsDuration) return undefined;
@@ -21,14 +21,14 @@ describe("toDuration", () => {
     const range = new Range(new Time(12, 0), new Time(14, 30));
     const entry = new Entry(range);
 
-    expect(entry.toDuration()).toEqual(new KlogDuration(2, 30));
+    expect(entry.toDuration()).toEqual(new Duration(2, 30));
   });
 
   test("accepts duration - and clones it", () => {
-    const duration = new KlogDuration(1, 30);
+    const duration = new Duration(1, 30);
     const entry = new Entry(duration);
 
-    expect(entry.toDuration()).toEqual(new KlogDuration(1, 30));
+    expect(entry.toDuration()).toEqual(new Duration(1, 30));
     expect(entry.value).toBe(duration); // Inner value should be the same object
     expect(entry.toDuration()).not.toBe(duration); // `toDuration` should clone
   });
@@ -38,7 +38,7 @@ describe("toDuration", () => {
     const entry = new Entry(range);
 
     expect(range.open).toEqual(true);
-    expect(entry.toDuration()).toEqual(new KlogDuration(0, 0));
+    expect(entry.toDuration()).toEqual(new Duration(0, 0));
   });
 });
 
@@ -47,7 +47,7 @@ test("toMinutes", () => {
   const entry1 = new Entry(range);
   expect.soft(entry1.toMinutes()).toEqual(71);
 
-  const duration = new KlogDuration(4, 0);
+  const duration = new Duration(4, 0);
   const entry2 = new Entry(duration);
   expect.soft(entry2.toMinutes()).toEqual(240);
 });
@@ -58,7 +58,7 @@ describe("toString", () => {
     const entry1 = new Entry(range);
     expect.soft(entry1.toString()).toEqual("    12:00 - 13:11");
 
-    const duration = new KlogDuration(4, 0);
+    const duration = new Duration(4, 0);
     const entry2 = new Entry(duration);
     expect.soft(entry2.toString()).toEqual("    4h");
   });
@@ -68,7 +68,7 @@ describe("toString", () => {
     const entry1 = new Entry(range);
     expect(entry1.toString(Indentation.TwoSpaces)).toEqual("  9:00 - 17:30");
 
-    const duration = new KlogDuration(0, -31);
+    const duration = new Duration(0, -31);
     const entry2 = new Entry(duration);
     expect(entry2.toString(Indentation.Tab)).toEqual("\t-31m");
   });
@@ -79,7 +79,7 @@ describe("toString", () => {
     const entry1 = new Entry(range, summary1);
     expect(entry1.toString()).toEqual("    10:00 - 10:30 Morning #standup");
 
-    const duration = KlogDuration.fromMinutes(-90);
+    const duration = Duration.fromMinutes(-90);
     const summary2 = new Summary(["Lunch break", "And also shopping"]);
     const entry2 = new Entry(duration, summary2);
     expect(entry2.toString(Indentation.Tab)).toEqual(

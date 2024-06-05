@@ -1,4 +1,4 @@
-import { KlogDuration } from "./duration.js";
+import { Duration } from "./duration.js";
 import { Range } from "./range.js";
 import { Summary } from "./summary.js";
 import { EntryNode } from "./types.js";
@@ -12,12 +12,12 @@ export enum Indentation {
 
 export class Entry {
   constructor(
-    public value: KlogDuration | Range,
+    public value: Duration | Range,
     public summary: Summary | null = null
   ) {}
 
   static fromAST(node: EntryNode) {
-    const ValueType = node.value.type === "duration" ? KlogDuration : Range;
+    const ValueType = node.value.type === "duration" ? Duration : Range;
     return new this(
       ValueType.fromAST(node.value as any),
       node.summary ? new Summary(node.summary) : null
@@ -25,10 +25,10 @@ export class Entry {
   }
 
   toDuration() {
-    if (this.value instanceof KlogDuration)
+    if (this.value instanceof Duration)
       // Return a clone instead of returning a reference
-      return KlogDuration.fromMinutes(this.value.toMinutes());
-    else if (this.value.open) return new KlogDuration(0, 0);
+      return Duration.fromMinutes(this.value.toMinutes());
+    else if (this.value.open) return new Duration(0, 0);
     else return this.value.toDuration();
   }
 

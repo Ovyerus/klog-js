@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { KlogDuration } from "./duration.js";
+import { Duration } from "./duration.js";
 import { Entry } from "./entry.js";
 import { Range } from "./range.js";
 import { Time } from "./time.js";
@@ -18,7 +18,7 @@ export class Record {
     public date: Date,
     public entries: Entry[] = [],
     public summary: Summary | null = null,
-    public shouldTotal: KlogDuration | null = null,
+    public shouldTotal: Duration | null = null,
     public dateFormat = RecordDateFormat.Dashes
   ) {}
 
@@ -27,7 +27,7 @@ export class Record {
       node.date,
       node.entries.map(Entry.fromAST),
       node.summary ? new Summary(node.summary) : null,
-      node.shouldTotal && KlogDuration.fromAST(node.shouldTotal)
+      node.shouldTotal && Duration.fromAST(node.shouldTotal)
     );
   }
 
@@ -67,7 +67,7 @@ export class Record {
   }
 
   toDuration() {
-    return KlogDuration.fromMinutes(this.toMinutes());
+    return Duration.fromMinutes(this.toMinutes());
   }
 
   toString() {

@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { Range, RangeDashFormat } from "../src/range";
 import { DayShift, Time, TimeFormat } from "../src/time";
-import { KlogDuration } from "../src/duration";
+import { Duration } from "../src/duration";
 
 const areDurationsEqual = (a: unknown, b: unknown) => {
-  const aIsDuration = a instanceof KlogDuration;
-  const bIsDuration = b instanceof KlogDuration;
+  const aIsDuration = a instanceof Duration;
+  const bIsDuration = b instanceof Duration;
 
   if (aIsDuration && bIsDuration) return a.equals(b);
   else if (aIsDuration === bIsDuration) return undefined;
@@ -91,22 +91,22 @@ test("toMinutes", () => {
 
 test("toDuration", () => {
   const range1 = new Range(new Time(12, 3), new Time(12, 42));
-  expect.soft(range1.toDuration()).toEqual(new KlogDuration(0, 39));
+  expect.soft(range1.toDuration()).toEqual(new Duration(0, 39));
 
   const range2 = new Range(
     new Time(21, 42, DayShift.Yesterday),
     new Time(3, 45)
   );
-  expect.soft(range2.toDuration()).toEqual(new KlogDuration(6, 3));
+  expect.soft(range2.toDuration()).toEqual(new Duration(6, 3));
 
   const range3 = new Range(
     new Time(23, 30),
     new Time(3, 30, DayShift.Tomorrow)
   );
-  expect.soft(range3.toDuration()).toEqual(new KlogDuration(4, 0));
+  expect.soft(range3.toDuration()).toEqual(new Duration(4, 0));
 
   const range4 = new Range(new Time(11, 30));
-  expect.soft(range4.toDuration()).toEqual(new KlogDuration(0, 0));
+  expect.soft(range4.toDuration()).toEqual(new Duration(0, 0));
 });
 
 describe("toString", () => {
