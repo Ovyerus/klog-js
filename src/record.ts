@@ -42,10 +42,10 @@ export class Record {
     return format(this.date, `yyyy${dateSep}MM${dateSep}dd`);
   }
 
-  meetsShouldTotal() {
-    // Treat a shouldTotal of `0m` to not exist
-    const target = this.shouldTotal?.toMinutes();
-    return !target || target === this.toMinutes();
+  shouldTotalDiff() {
+    const actual = this.toDuration();
+    if (!this.shouldTotal) return actual;
+    return actual.subtract(this.shouldTotal);
   }
 
   start(startTime: Time, summary: Summary | null = null) {
@@ -75,9 +75,11 @@ export class Record {
     let headline = this.dateString;
     if (this.shouldTotal?.toMinutes()) headline += ` (${this.shouldTotal}!)`;
 
-    const summary = this.summary?.toString(null, false) + "\n" || "";
+    const summary = this.summary
+      ? this.summary.toString(null, false) + "\n"
+      : "";
     const entries = this.entries.map((e) => e.toString()).join("\n");
 
-    return headline + summary + entries;
+    return headline + "\n" + summary + entries;
   }
 }

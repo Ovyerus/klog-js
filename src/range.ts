@@ -15,6 +15,7 @@ export interface RangeOptions {
 export class Range {
   #end: Time | null;
   format: RangeDashFormat;
+  // TODO: rename to `additionalPlaceholderChars` like klog
   openRangePlaceholderCharCount: number;
 
   constructor(
@@ -55,15 +56,7 @@ export class Range {
   }
 
   get open() {
-    return !!this.end;
-  }
-
-  get startMinutes() {
-    return this.start.toMinutes();
-  }
-
-  get endMinutes() {
-    return this.end?.toMinutes() ?? null;
+    return !this.end;
   }
 
   toDuration() {
@@ -72,10 +65,10 @@ export class Range {
 
   toMinutes() {
     if (this.open) return 0; // unlimited potential!
-    const start = this.start.toMinutes();
-    const end = this.end!.toMinutes();
+    const start = this.start.toMinutesSinceMidnight();
+    const end = this.end!.toMinutesSinceMidnight();
 
-    return start - end;
+    return end - start;
   }
 
   toString() {

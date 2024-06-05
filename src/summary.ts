@@ -38,6 +38,7 @@ export type SummaryAsTags = EndOfLineNode | TextNode | TagNode;
 export class Summary {
   lines: string[];
 
+  // TODO: maybe take a rest parameter instead
   constructor(text: string | string[]) {
     this.lines = typeof text === "string" ? text.split("\n") : text;
   }
@@ -50,12 +51,14 @@ export class Summary {
     const tags: Tag[] = [];
 
     for (const line of this.lines) {
-      const matches = line.match(tagRe);
+      const matches = line.matchAll(tagRe);
       if (!matches) continue;
 
       for (const tag of matches) {
-        const { groups } = tagRe.exec(tag)!;
-        tags.push({ name: groups!.name, value: groups!.value });
+        const toPush: Tag = { name: tag.groups!.name };
+        if (tag.groups!.value) toPush.value = tag.groups!.value;
+
+        tags.push(toPush);
       }
     }
 
@@ -77,13 +80,15 @@ export class Summary {
         if (isEmptyTextAtFirstIndex || isEmptyTextAtLastIndex) continue;
 
         const match = tagRe.exec(value) as TagMatch;
-        if (!match) nodes.push({ type: "text", value });
+        if (!match) {
+          nodes.push({ type: "text", value });
+          continue;
+        }
 
-        nodes.push({
-          type: "tag",
-          name: match!.groups.name,
-          value: match!.groups.value,
-        });
+        const toPush: TagNode = { type: "tag", name: match.groups.name };
+        if (match.groups.value) toPush.value = match.groups.value;
+
+        nodes.push(toPush);
       }
 
       if (lineIndex !== textSplitOnTags.length - 1)
@@ -95,11 +100,12 @@ export class Summary {
 
   toString(indentation: Indentation | null = null, startOnNextLine = false) {
     // TODO: this shouldn't do indentation on the first line when not starting on new line
+    const indent = (l: string, i: number) =>
+      i !== 0 || startOnNextLine ? `${(indentation || "").repeat(2)}${l}` : l;
+
     return (
       (startOnNextLine ? "\n" : "") +
-      this.lines
-        .map((l) => (indentation ? `${indentation}${indentation}${l}` : l))
-        .join("\n")
+      this.lines.map((l, i) => indent(l, i)).join("\n")
     );
   }
 }

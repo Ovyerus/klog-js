@@ -1,3 +1,4 @@
+import { KlogDuration } from "./duration.js";
 import { TimeNode } from "./types.js";
 
 export enum TimeFormat {
@@ -11,6 +12,7 @@ export enum DayShift {
   Tomorrow = 1,
 }
 
+// TODO: add duration?
 export class Time {
   constructor(
     /** The hour of the time, in 24 hour time. */
@@ -42,42 +44,56 @@ export class Time {
   static isValidValue(hour: number, minute: number, dayShift = DayShift.Today) {
     if (hour === 24 && minute === 0 && dayShift !== DayShift.Tomorrow)
       return true;
-    else return hour <= 23 && minute <= 59;
+    else return hour <= 23 && hour >= 0 && minute <= 59 && minute >= 0;
   }
 
   equals(other: this) {
-    return this.toMinutes() === other.toMinutes();
+    return this.toMinutesSinceMidnight() === other.toMinutesSinceMidnight();
   }
 
   afterOrEquals(other: this) {
-    return this.toMinutes() >= other.toMinutes();
+    return this.toMinutesSinceMidnight() >= other.toMinutesSinceMidnight();
   }
 
-  toString() {
+  toString(formatOverride?: TimeFormat) {
     const shiftPrefix = this.dayShift === DayShift.Yesterday ? "<" : "";
     const shiftSuffix = this.dayShift === DayShift.Tomorrow ? ">" : "";
-    let h = this.hour;
+    let hour = this.hour;
+    const minute = this.minute.toString().padStart(2, "0");
     let periodSuffix: "" | "am" | "pm" = "";
 
-    if (this.format === TimeFormat.TwelveHour) {
-      if (h === 0) {
-        h = 12;
+    if ((formatOverride || this.format) === TimeFormat.TwelveHour) {
+      if (hour === 0) {
+        hour = 12;
         periodSuffix = "am";
-      } else if (h === 12) {
+      } else if (hour === 12) {
         periodSuffix = "pm";
-      } else if (h > 12) {
-        h = h - 12;
+      } else if (hour > 12) {
+        hour = hour - 12;
         periodSuffix = "pm";
       } else {
         periodSuffix = "am";
       }
     }
 
-    return `${shiftPrefix}${h}:${this.minute}${periodSuffix}${shiftSuffix}`;
+    return `${shiftPrefix}${hour}:${minute}${periodSuffix}${shiftSuffix}`;
   }
 
-  toMinutes() {
-    // TODO: take day shift into account
-    return this.hour * 60 + this.minute;
+  toDurationSinceMidnight() {
+    let hour = this.hour;
+    let minute = this.minute;
+
+    if (this.dayShift === DayShift.Yesterday) {
+      hour = -23 + hour;
+      minute = -60 + minute;
+    } else if (this.dayShift === DayShift.Tomorrow) {
+      hour += 24;
+    }
+
+    return new KlogDuration(hour, minute);
+  }
+
+  toMinutesSinceMidnight() {
+    return this.toDurationSinceMidnight().toMinutes();
   }
 }
