@@ -5,6 +5,9 @@ import { describe, expect, test } from "vitest";
 import { parseAST } from "../src/parser";
 import { DayShift, TimeFormat } from "../src/time";
 import { RangeDashFormat } from "../src/range";
+import multipleResult from "./result/multiple";
+import sameDayResult from "./result/same-day";
+import singleResult from "./result/single";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const readCorpus = (file: string) =>
@@ -20,12 +23,12 @@ const sameDay = await readCorpus("same-day.klg");
 describe("full files", () => {
   test("parses file with single record", () => {
     const result = parseAST(singleRecord);
-    expect(result).toMatchFileSnapshot("./result/single.txt");
+    expect(result).toEqual(singleResult);
   });
 
   test("parses file with multiple records", () => {
     const result = parseAST(multipleRecords);
-    expect(result).toMatchFileSnapshot("./result/multiple.txt");
+    expect(result).toEqual(multipleResult);
   });
 
   test("parses empty file", () => {
@@ -94,7 +97,7 @@ describe("full files", () => {
 
   test("parses file with records on the same day", () => {
     const result = parseAST(sameDay);
-    expect(result).toMatchFileSnapshot("./result/same-day.txt");
+    expect(result).toEqual(sameDayResult);
   });
 });
 

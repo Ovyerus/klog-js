@@ -4,4 +4,4 @@ node_modules
 dist
 *.ohm-bundle.*
 coverage
-result
+./result
