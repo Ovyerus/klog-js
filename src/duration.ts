@@ -82,6 +82,6 @@ export class Duration {
   }
 
   [customInspect]() {
-    return `KlogDuration { hours: ${this.sign}${this.hours}, minutes: ${this.sign}${this.minutes} }`;
+    return `Duration { hours: ${this.sign}${this.hours}, minutes: ${this.sign}${this.minutes} }`;
   }
 }

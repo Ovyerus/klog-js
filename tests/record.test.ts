@@ -3,12 +3,12 @@ import { Record, RecordDateFormat } from "../src/record";
 import { Entry } from "../src/entry";
 import { Time } from "../src/time";
 import { Range } from "../src/range";
-import { KlogDuration } from "../src/duration";
+import { Duration } from "../src/duration";
 import { Summary } from "../src/summary";
 
 const areDurationsEqual = (a: unknown, b: unknown) => {
-  const aIsDuration = a instanceof KlogDuration;
-  const bIsDuration = b instanceof KlogDuration;
+  const aIsDuration = a instanceof Duration;
+  const bIsDuration = b instanceof Duration;
 
   if (aIsDuration && bIsDuration) return a.equals(b);
   else if (aIsDuration === bIsDuration) return undefined;
@@ -75,7 +75,7 @@ test("toMinutes", () => {
 
   const record2 = new Record(new Date(2024, 1, 14), [
     new Entry(new Range(new Time(9, 0), new Time(11, 30))),
-    new Entry(new KlogDuration(2, 15)),
+    new Entry(new Duration(2, 15)),
     new Entry(new Range(new Time(17, 0), new Time(21, 0))),
   ]);
   expect.soft(record2.toMinutes()).toEqual(
@@ -88,16 +88,14 @@ test("toMinutes", () => {
 
 test("toDuration", () => {
   const record1 = new Record(new Date(2024, 1, 14), []);
-  expect.soft(record1.toDuration()).toEqual(new KlogDuration(0, 0));
+  expect.soft(record1.toDuration()).toEqual(new Duration(0, 0));
 
   const record2 = new Record(new Date(2024, 1, 14), [
     new Entry(new Range(new Time(9, 0), new Time(11, 30))),
-    new Entry(new KlogDuration(2, 15)),
+    new Entry(new Duration(2, 15)),
     new Entry(new Range(new Time(17, 0), new Time(21, 0))),
   ]);
-  expect
-    .soft(record2.toDuration())
-    .toEqual(new KlogDuration(2 + 2 + 4, 30 + 15));
+  expect.soft(record2.toDuration()).toEqual(new Duration(2 + 2 + 4, 30 + 15));
 });
 
 describe("shouldTotalDiff", () => {
@@ -106,13 +104,13 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [
         new Entry(new Range(new Time(9, 0), new Time(11, 30))),
-        new Entry(new KlogDuration(2, 15)),
+        new Entry(new Duration(2, 15)),
       ],
       null,
-      new KlogDuration(8, 0),
+      new Duration(8, 0),
     );
 
-    expect(record.shouldTotalDiff()).toEqual(new KlogDuration(-3, -15));
+    expect(record.shouldTotalDiff()).toEqual(new Duration(-3, -15));
   });
 
   test("returns the inverse of the should total value when there are no entries", () => {
@@ -120,10 +118,10 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [],
       null,
-      new KlogDuration(8, 0),
+      new Duration(8, 0),
     );
 
-    expect(record.shouldTotalDiff()).toEqual(new KlogDuration(-8, 0));
+    expect(record.shouldTotalDiff()).toEqual(new Duration(-8, 0));
   });
 
   test("returns empty duration when both match", () => {
@@ -131,10 +129,10 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [new Entry(new Range(new Time(10, 0), new Time(18, 0)))],
       null,
-      new KlogDuration(8, 0),
+      new Duration(8, 0),
     );
 
-    expect(record.shouldTotalDiff()).toEqual(new KlogDuration(0, 0));
+    expect(record.shouldTotalDiff()).toEqual(new Duration(0, 0));
   });
 
   test("returns a positive diff if the total sum is larger than the expected duration", () => {
@@ -142,10 +140,10 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [new Entry(new Range(new Time(10, 0), new Time(18, 0)))],
       null,
-      new KlogDuration(5, 0),
+      new Duration(5, 0),
     );
 
-    expect(record.shouldTotalDiff()).toEqual(new KlogDuration(3, 0));
+    expect(record.shouldTotalDiff()).toEqual(new Duration(3, 0));
   });
 });
 
@@ -213,7 +211,7 @@ describe("toString", () => {
   test("basic record", () => {
     const record = new Record(new Date(2024, 1, 14), [
       new Entry(new Range(new Time(9, 30), new Time(14, 45))),
-      new Entry(new KlogDuration(-1, 0), new Summary("Break")),
+      new Entry(new Duration(-1, 0), new Summary("Break")),
     ]);
 
     expect(record.toString()).toEqual(
@@ -241,7 +239,7 @@ describe("toString", () => {
       new Date(2024, 1, 14),
       [new Entry(new Range(new Time(9, 30), new Time(14, 45)))],
       null,
-      new KlogDuration(8, 30),
+      new Duration(8, 30),
     );
 
     expect(record.toString()).toEqual(
@@ -254,7 +252,7 @@ describe("toString", () => {
   test("with a summary", () => {
     const record = new Record(
       new Date(2024, 1, 14),
-      [new Entry(new KlogDuration(5, 11), new Summary("Get stuff done"))],
+      [new Entry(new Duration(5, 11), new Summary("Get stuff done"))],
       new Summary(["Lorem ipsum dolor", "sit amet. Blah blah blah"]),
     );
 
@@ -272,11 +270,11 @@ sit amet. Blah blah blah
       new Date(2024, 3, 11),
       [
         new Entry(new Range(new Time(9, 30), new Time(14, 45))),
-        new Entry(new KlogDuration(0, -30), new Summary("aldi run")),
+        new Entry(new Duration(0, -30), new Summary("aldi run")),
         new Entry(new Range(new Time(15, 15))),
       ],
       new Summary("busy busy day lots of #stuff"),
-      new KlogDuration(9, 0),
+      new Duration(9, 0),
     );
 
     expect(record.toString()).toEqual(
