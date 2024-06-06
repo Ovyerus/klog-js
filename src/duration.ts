@@ -18,7 +18,7 @@ export class Duration {
   constructor(
     hours: number,
     minutes: number,
-    { explicitPositive = false, zeroSign = "" }: DurationOptions = {}
+    { explicitPositive = false, zeroSign = "" }: DurationOptions = {},
   ) {
     this.#value = hours * 60 + minutes;
     this.explicitPositive = explicitPositive;

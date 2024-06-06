@@ -660,8 +660,8 @@ describe("entries", () => {
         expect(
           parseAST(
             "\t-120m This is a longer summary, which\n\t\tis continued on the next line.",
-            "entry"
-          )
+            "entry",
+          ),
         ).toMatchObject({
           type: "entry",
           summary:
@@ -674,8 +674,8 @@ describe("entries", () => {
         expect(
           parseAST(
             "\t10h First line\n\t\tSecond line with more\n\t\tThird line!!!\n\t\tYet another line woah.",
-            "entry"
-          )
+            "entry",
+          ),
         ).toMatchObject({
           type: "entry",
           summary:
@@ -685,10 +685,10 @@ describe("entries", () => {
 
       test("requires double indent", () => {
         expect(() =>
-          parseAST("\t2:00 - 5:00 Cool summary\nNo indent!", "entry")
+          parseAST("\t2:00 - 5:00 Cool summary\nNo indent!", "entry"),
         ).toThrow();
         expect(() =>
-          parseAST("\t2:00 - 5:00 Cool summary\n\tOne indent!", "entry")
+          parseAST("\t2:00 - 5:00 Cool summary\n\tOne indent!", "entry"),
         ).toThrow();
       });
     });

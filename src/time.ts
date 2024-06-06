@@ -22,7 +22,7 @@ export class Time {
     /** If the time belongs to the tomorrow or yesterday. */
     public dayShift = DayShift.Today,
     /** The format to use for the time when rendering as a string. */
-    public format = TimeFormat.TwentyFourHour
+    public format = TimeFormat.TwentyFourHour,
   ) {
     if (!Time.isValidValue(hour, minute, dayShift))
       throw new Error("Invalid time");

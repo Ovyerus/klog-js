@@ -83,7 +83,7 @@ describe("toString", () => {
     const summary2 = new Summary(["Lunch break", "And also shopping"]);
     const entry2 = new Entry(duration, summary2);
     expect(entry2.toString(Indentation.Tab)).toEqual(
-      "\t-1h30m Lunch break\n\t\tAnd also shopping"
+      "\t-1h30m Lunch break\n\t\tAnd also shopping",
     );
 
     // TODO: test for auto starting on next line.

@@ -34,7 +34,7 @@ const mapping: KlogActionDict<KlogNode> = {
     __,
     entry1,
     ___,
-    entries
+    entries,
   ): RecordNode {
     return {
       type: "record",
@@ -101,7 +101,7 @@ const mapping: KlogActionDict<KlogNode> = {
     spaceLeft,
     __,
     spaceRight,
-    placeholder
+    placeholder,
   ): OpenTimeRangeNode => {
     const hasSpaces = !!(
       [spaceLeft, spaceRight].flatMap((n) => n.toAST(mapping)) as string[]
@@ -121,7 +121,7 @@ const mapping: KlogActionDict<KlogNode> = {
     spaceLeft,
     __,
     spaceRight,
-    end
+    end,
   ): ClosedTimeRangeNode => {
     const hasSpaces = !!(
       [spaceLeft, spaceRight].flatMap((n) => n.toAST(mapping)) as string[]
@@ -169,7 +169,7 @@ const mapping: KlogActionDict<KlogNode> = {
     const hours = parseInt($hours.toAST(mapping).join(""), 10);
     const minutes = parseInt(
       minute1.toAST(mapping) + minute2.toAST(mapping),
-      10
+      10,
     );
     const value = (hours * 60 + minutes) * mul;
 

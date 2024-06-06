@@ -63,7 +63,7 @@ describe("dateString", () => {
       [],
       null,
       null,
-      RecordDateFormat.Slashes
+      RecordDateFormat.Slashes,
     );
     expect(record.dateString).toEqual("2024/02/14");
   });
@@ -82,7 +82,7 @@ test("toMinutes", () => {
     2 * 60 +
       30 + // ^ entry 1
       (2 * 60 + 15) + // entry 2
-      4 * 60 // entry 3
+      4 * 60, // entry 3
   );
 });
 
@@ -109,7 +109,7 @@ describe("shouldTotalDiff", () => {
         new Entry(new KlogDuration(2, 15)),
       ],
       null,
-      new KlogDuration(8, 0)
+      new KlogDuration(8, 0),
     );
 
     expect(record.shouldTotalDiff()).toEqual(new KlogDuration(-3, -15));
@@ -120,7 +120,7 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [],
       null,
-      new KlogDuration(8, 0)
+      new KlogDuration(8, 0),
     );
 
     expect(record.shouldTotalDiff()).toEqual(new KlogDuration(-8, 0));
@@ -131,7 +131,7 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [new Entry(new Range(new Time(10, 0), new Time(18, 0)))],
       null,
-      new KlogDuration(8, 0)
+      new KlogDuration(8, 0),
     );
 
     expect(record.shouldTotalDiff()).toEqual(new KlogDuration(0, 0));
@@ -142,7 +142,7 @@ describe("shouldTotalDiff", () => {
       new Date(2024, 1, 14),
       [new Entry(new Range(new Time(10, 0), new Time(18, 0)))],
       null,
-      new KlogDuration(5, 0)
+      new KlogDuration(5, 0),
     );
 
     expect(record.shouldTotalDiff()).toEqual(new KlogDuration(3, 0));
@@ -166,7 +166,7 @@ describe("start", () => {
     ]);
 
     expect(() => record.start(new Time(13, 0))).toThrow(
-      "Records can only have one open range at a time"
+      "Records can only have one open range at a time",
     );
   });
 });
@@ -194,7 +194,7 @@ describe("end", () => {
       new Entry(new Range(new Time(13, 5), new Time(15, 33))),
     ]);
     expect(() => record.end(new Time(16, 0))).toThrow(
-      "Record does not have any currently open ranges"
+      "Record does not have any currently open ranges",
     );
   });
 
@@ -204,7 +204,7 @@ describe("end", () => {
     ]);
 
     expect(() => record.end(new Time(11, 0))).toThrow(
-      "End of range cannot be before its start"
+      "End of range cannot be before its start",
     );
   });
 });
@@ -220,7 +220,7 @@ describe("toString", () => {
       `
 2024-02-14
     9:30 - 14:45
-    -1h Break`.trim()
+    -1h Break`.trim(),
     );
   });
 
@@ -230,7 +230,7 @@ describe("toString", () => {
       [],
       null,
       null,
-      RecordDateFormat.Slashes
+      RecordDateFormat.Slashes,
     );
 
     expect(record.toString()).toEqual("2024/02/24\n");
@@ -241,13 +241,13 @@ describe("toString", () => {
       new Date(2024, 1, 14),
       [new Entry(new Range(new Time(9, 30), new Time(14, 45)))],
       null,
-      new KlogDuration(8, 30)
+      new KlogDuration(8, 30),
     );
 
     expect(record.toString()).toEqual(
       `
 2024-02-14 (8h30m!)
-    9:30 - 14:45`.trim()
+    9:30 - 14:45`.trim(),
     );
   });
 
@@ -255,7 +255,7 @@ describe("toString", () => {
     const record = new Record(
       new Date(2024, 1, 14),
       [new Entry(new KlogDuration(5, 11), new Summary("Get stuff done"))],
-      new Summary(["Lorem ipsum dolor", "sit amet. Blah blah blah"])
+      new Summary(["Lorem ipsum dolor", "sit amet. Blah blah blah"]),
     );
 
     expect(record.toString()).toEqual(
@@ -263,7 +263,7 @@ describe("toString", () => {
 2024-02-14
 Lorem ipsum dolor
 sit amet. Blah blah blah
-    5h11m Get stuff done`.trim()
+    5h11m Get stuff done`.trim(),
     );
   });
 
@@ -276,7 +276,7 @@ sit amet. Blah blah blah
         new Entry(new Range(new Time(15, 15))),
       ],
       new Summary("busy busy day lots of #stuff"),
-      new KlogDuration(9, 0)
+      new KlogDuration(9, 0),
     );
 
     expect(record.toString()).toEqual(
@@ -285,7 +285,7 @@ sit amet. Blah blah blah
 busy busy day lots of #stuff
     9:30 - 14:45
     -30m aldi run
-    15:15 - ?`.trim()
+    15:15 - ?`.trim(),
     );
   });
 });

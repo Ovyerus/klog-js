@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc && cp ./src/grammar.ohm ./dist/ && pnpm generate",
+    "format": "prettier --write ./",
     "generate": "ohm generateBundles --esm --withTypes 'dist/*.ohm'",
     "generate:dev": "ohm generateBundles --esm --withTypes 'src/*.ohm'",
     "test": "vitest --run",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@ohm-js/cli": "^2.0.0",
     "@types/node": "^20.12.7",
+    "prettier": "^3.3.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.3"
   }

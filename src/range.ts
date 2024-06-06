@@ -24,7 +24,7 @@ export class Range {
     {
       format = RangeDashFormat.Spaces,
       openRangePlaceholderCharCount = 1,
-    }: RangeOptions = {}
+    }: RangeOptions = {},
   ) {
     if (end && !end.afterOrEquals(start))
       throw new Error("End of range cannot be before its start");

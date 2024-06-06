@@ -39,7 +39,7 @@ test("rejects invalid times", () => {
   for (const [hour, minute] of times) {
     expect(
       () => new Time(hour, minute),
-      `Time should not accept ${hour}:${minute}`
+      `Time should not accept ${hour}:${minute}`,
     ).toThrow();
   }
 });
@@ -76,7 +76,7 @@ describe("toString", () => {
   test("serialises normal time in various formats", () => {
     expect(new Time(13, 45).toString()).toEqual("13:45");
     expect(new Time(15, 5).toString(TimeFormat.TwentyFourHour)).toEqual(
-      "15:05"
+      "15:05",
     );
     expect(new Time(7, 23).toString(TimeFormat.TwelveHour)).toEqual("7:23am");
   });

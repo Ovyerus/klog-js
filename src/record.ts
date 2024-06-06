@@ -19,7 +19,7 @@ export class Record {
     public entries: Entry[] = [],
     public summary: Summary | null = null,
     public shouldTotal: Duration | null = null,
-    public dateFormat = RecordDateFormat.Dashes
+    public dateFormat = RecordDateFormat.Dashes,
   ) {}
 
   static fromAST(node: RecordNode) {
@@ -27,7 +27,7 @@ export class Record {
       node.date,
       node.entries.map(Entry.fromAST),
       node.summary ? new Summary(node.summary) : null,
-      node.shouldTotal && Duration.fromAST(node.shouldTotal)
+      node.shouldTotal && Duration.fromAST(node.shouldTotal),
     );
   }
 

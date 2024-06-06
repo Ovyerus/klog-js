@@ -95,13 +95,13 @@ test("toDuration", () => {
 
   const range2 = new Range(
     new Time(21, 42, DayShift.Yesterday),
-    new Time(3, 45)
+    new Time(3, 45),
   );
   expect.soft(range2.toDuration()).toEqual(new Duration(6, 3));
 
   const range3 = new Range(
     new Time(23, 30),
-    new Time(3, 30, DayShift.Tomorrow)
+    new Time(3, 30, DayShift.Tomorrow),
   );
   expect.soft(range3.toDuration()).toEqual(new Duration(4, 0));
 
