@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf ./dist && tsc && cp ./src/grammar.ohm ./dist/ && pnpm generate",
+    "build": "rm -rf ./dist && pnpm generate:dev && tsc && cp ./src/grammar.ohm ./dist/ && pnpm generate",
     "format": "prettier --write ./",
     "generate": "ohm generateBundles --esm --withTypes 'dist/*.ohm'",
     "generate:dev": "ohm generateBundles --esm --withTypes 'src/*.ohm'",
