@@ -22,14 +22,14 @@ export class Record {
     public dateFormat = RecordDateFormat.Dashes,
   ) {}
 
-  static fromAST(node: RecordNode) {
+  static fromAST = (node: RecordNode) => {
     return new this(
       node.date,
       node.entries.map(Entry.fromAST),
       node.summary ? new Summary(node.summary) : null,
-      node.shouldTotal && Duration.fromAST(node.shouldTotal),
+      node.shouldTotal ? Duration.fromMinutes(node.shouldTotal) : null,
     );
-  }
+  };
 
   get openEntry() {
     return (

@@ -4,6 +4,8 @@ import { DurationNode, Sign } from "./types.js";
 // browser.
 const customInspect = Symbol.for("nodejs.util.inspect.custom");
 
+const bumpNegativeZero = (value: number) => (value === -0 ? 0 : value);
+
 export interface DurationOptions {
   explicitPositive?: boolean;
   zeroSign?: Sign;
@@ -28,23 +30,23 @@ export class Duration {
   static fromAST(node: DurationNode) {
     return this.fromMinutes(node.value, {
       explicitPositive: node.sign === "+",
-      zeroSign: node.sign,
+      zeroSign: node.value === 0 ? node.sign : "",
     });
   }
 
-  static fromMinutes(value: number, options: DurationOptions = {}) {
+  static fromMinutes = (value: number, options: DurationOptions = {}) => {
     const hours = Math.trunc(value / 60);
     const minutes = value % 60;
 
     return new this(hours, minutes, options);
-  }
+  };
 
   get minutes() {
-    return Math.abs(this.#value % 60);
+    return bumpNegativeZero(this.#value % 60);
   }
 
   get hours() {
-    return Math.abs(Math.trunc(this.#value / 60));
+    return bumpNegativeZero(Math.trunc(this.#value / 60));
   }
 
   get #options(): DurationOptions {
@@ -72,9 +74,14 @@ export class Duration {
   toString() {
     if (this.#value === 0) return `${this.sign}0m`;
 
-    const h = this.hours !== 0 ? `${this.hours}h` : "";
-    const m = this.minutes !== 0 ? `${this.minutes}m` : "";
+    const h = this.hours !== 0 ? `${Math.abs(this.hours)}h` : "";
+    const m = this.minutes !== 0 ? `${Math.abs(this.minutes)}m` : "";
     return `${this.sign}${h}${m}`;
+  }
+
+  toJSON() {
+    const { hours, minutes, zeroSign, explicitPositive } = this;
+    return { hours, minutes, zeroSign, explicitPositive };
   }
 
   toMinutes() {
@@ -82,6 +89,6 @@ export class Duration {
   }
 
   [customInspect]() {
-    return `Duration { hours: ${this.sign}${this.hours}, minutes: ${this.sign}${this.minutes} }`;
+    return `Duration { hours: ${this.hours}, minutes: ${this.minutes} }`;
   }
 }

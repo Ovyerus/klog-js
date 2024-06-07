@@ -6,17 +6,6 @@ import { Range } from "../src/range";
 import { Duration } from "../src/duration";
 import { Summary } from "../src/summary";
 
-const areDurationsEqual = (a: unknown, b: unknown) => {
-  const aIsDuration = a instanceof Duration;
-  const bIsDuration = b instanceof Duration;
-
-  if (aIsDuration && bIsDuration) return a.equals(b);
-  else if (aIsDuration === bIsDuration) return undefined;
-  else return false;
-};
-
-expect.addEqualityTesters([areDurationsEqual]);
-
 // Just do a basic construction with nothing but a date
 test("initialising", () => {
   const date = new Date(2024, 1, 14);

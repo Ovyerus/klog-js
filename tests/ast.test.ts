@@ -1,5 +1,5 @@
 import { promises as fs } from "node:fs";
-import { dirname, format, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { parseAST } from "../src/parser";

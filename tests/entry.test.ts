@@ -5,17 +5,6 @@ import { Time } from "../src/time";
 import { Duration } from "../src/duration";
 import { Summary } from "../src/summary";
 
-const areDurationsEqual = (a: unknown, b: unknown) => {
-  const aIsDuration = a instanceof Duration;
-  const bIsDuration = b instanceof Duration;
-
-  if (aIsDuration && bIsDuration) return a.equals(b);
-  else if (aIsDuration === bIsDuration) return undefined;
-  else return false;
-};
-
-expect.addEqualityTesters([areDurationsEqual]);
-
 describe("toDuration", () => {
   test("accepts time range", () => {
     const range = new Range(new Time(12, 0), new Time(14, 30));

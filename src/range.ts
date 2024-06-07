@@ -34,14 +34,14 @@ export class Range {
     this.openRangePlaceholderCharCount = openRangePlaceholderCharCount;
   }
 
-  static fromAST(node: TimeRangeNode) {
+  static fromAST = (node: TimeRangeNode) => {
     const start = Time.fromAST(node.start);
     const end = !node.open ? Time.fromAST(node.end) : null;
     return new this(start, end, {
       openRangePlaceholderCharCount: node.open ? node.placeholderCount : 1,
       format: node.format,
     });
-  }
+  };
 
   get end() {
     return this.#end;
@@ -76,5 +76,10 @@ export class Range {
     return `${this.start}${dash}${
       this.open ? "?".repeat(this.openRangePlaceholderCharCount) : this.end
     }`;
+  }
+
+  toJSON() {
+    const { start, end, format, openRangePlaceholderCharCount } = this;
+    return { start, end, format, openRangePlaceholderCharCount };
   }
 }

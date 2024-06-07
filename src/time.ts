@@ -37,9 +37,9 @@ export class Time {
     }
   }
 
-  static fromAST(node: TimeNode) {
+  static fromAST = (node: TimeNode) => {
     return new this(node.hour, node.minute, node.shift, node.format);
-  }
+  };
 
   static isValidValue(hour: number, minute: number, dayShift = DayShift.Today) {
     if (hour === 24 && minute === 0 && dayShift !== DayShift.Tomorrow)

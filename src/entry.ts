@@ -16,13 +16,13 @@ export class Entry {
     public summary: Summary | null = null,
   ) {}
 
-  static fromAST(node: EntryNode) {
+  static fromAST = (node: EntryNode) => {
     const ValueType = node.value.type === "duration" ? Duration : Range;
     return new this(
       ValueType.fromAST(node.value as any),
       node.summary ? new Summary(node.summary) : null,
     );
-  }
+  };
 
   toDuration() {
     if (this.value instanceof Duration)

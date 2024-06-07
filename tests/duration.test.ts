@@ -1,16 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { Duration } from "../src/duration";
 
-const areDurationsEqual = (a: unknown, b: unknown) => {
-  const aIsDuration = a instanceof Duration;
-  const bIsDuration = b instanceof Duration;
-
-  if (aIsDuration && bIsDuration) return a.equals(b);
-  else if (aIsDuration === bIsDuration) return undefined;
-  else return false;
-};
-
-expect.addEqualityTesters([areDurationsEqual]);
+test.fails("make sure the equality checker works", () => {
+  expect(new Duration(1, 0)).toEqual(new Duration(1, 1));
+});
 
 test("constructing from minutes", () => {
   const duration1 = Duration.fromMinutes(23);
@@ -28,17 +21,17 @@ test("constructing from minutes", () => {
   // Testing negatives
   const duration4 = Duration.fromMinutes(-600);
   expect.soft(duration4.minutes).toEqual(0);
-  expect.soft(duration4.hours).toEqual(10);
+  expect.soft(duration4.hours).toEqual(-10);
   expect.soft(duration4.sign).toEqual("-");
 
   const duration5 = Duration.fromMinutes(-23);
-  expect.soft(duration5.minutes).toEqual(23);
+  expect.soft(duration5.minutes).toEqual(-23);
   expect.soft(duration5.hours).toEqual(0);
   expect.soft(duration4.sign).toEqual("-");
 
   const duration6 = Duration.fromMinutes(-315);
-  expect.soft(duration6.minutes).toEqual(15);
-  expect.soft(duration6.hours).toEqual(5);
+  expect.soft(duration6.minutes).toEqual(-15);
+  expect.soft(duration6.hours).toEqual(-5);
   expect.soft(duration4.sign).toEqual("-");
 });
 

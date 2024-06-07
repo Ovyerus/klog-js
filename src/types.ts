@@ -11,7 +11,7 @@ export interface FileNode {
 export interface RecordNode {
   type: "record";
   date: Date;
-  shouldTotal: DurationNode | null;
+  shouldTotal: number | null;
   summary: string | null;
   entries: EntryNode[];
 }
