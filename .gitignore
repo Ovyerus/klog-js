@@ -5,3 +5,5 @@ dist
 *.ohm-bundle.*
 coverage
 ./result
+*.tgz
+*.tar.gz

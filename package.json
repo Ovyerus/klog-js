@@ -1,10 +1,20 @@
 {
-  "name": "klog-js",
+  "name": "klog.js",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "index.js",
+  "description": "A JavaScript implementation of the Klog time tracking file format",
+  "exports": "./dist/index.js",
+  "homepage": "https://github.com/Ovyerus/klog-js#readme",
+  "bugs": "https://github.com/Ovyerus/klog-js/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ovyerus/klog-js.git"
+  },
+  "files": [
+    "./dist/**/*"
+  ],
   "scripts": {
+    "prepack": "pnpm build",
     "build": "rm -rf ./dist && pnpm generate:dev && tsc && cp ./src/grammar.ohm ./dist/ && pnpm generate",
     "format": "prettier --write ./",
     "format:check": "prettier --check ./",
@@ -13,9 +23,16 @@
     "test": "vitest --run",
     "test:watch": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "time",
+    "tracking",
+    "klog",
+    "parser",
+    "serializer",
+    "plaintext"
+  ],
+  "author": "Ovyerus <ovy@ovyerus.com>",
+  "license": "MIT",
   "dependencies": {
     "date-fns": "^3.6.0",
     "ohm-js": "^17.1.0"
