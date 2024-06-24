@@ -99,7 +99,6 @@ export class Summary {
   }
 
   toString(indentation: Indentation | null = null, startOnNextLine = false) {
-    // TODO: this shouldn't do indentation on the first line when not starting on new line
     const indent = (l: string, i: number) =>
       i !== 0 || startOnNextLine ? `${(indentation || "").repeat(2)}${l}` : l;
 

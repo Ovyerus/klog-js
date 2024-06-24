@@ -29,11 +29,11 @@ import { parse } from "klog.js";
 
 const klogContent = `
 2024-06-01
-  2h  Working on project A
-  1h  Meeting with client
+    2h Working on project A
+    1h Meeting with client
 
 2024-06-02
-  3h  Development work
+    3h Development work
 `;
 
 const records = parse(klogContent);
@@ -61,6 +61,15 @@ const record = new Record(new Date(2024, 1, 24), [
 The Klog file format is a plain-text format for time tracking. For detailed
 information on the Klog format, visit the
 [Klog documentation](https://klog.jotaen.net/#file-format).
+
+## TODO
+
+- [ ] Automatic wrapping of summary lines?
+- [ ] Applying the same formatting options across all entries in a record.
+- [ ] Get warnings for a record (similar to how Klog does).
+- [ ] `toKlogJSON` for classes that returns an object compatible with
+      `klog json`.
+- [ ] Other miniscule fixes around formatting, especially with summaries.
 
 ## Reporting Bugs
 
