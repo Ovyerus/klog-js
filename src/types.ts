@@ -2,6 +2,7 @@ import { RangeDashFormat } from "./range.js";
 import { DayShift, TimeFormat } from "./time.js";
 
 export type Sign = "" | "+" | "-";
+export type Indentation = "    " | "   " | "  " | "\t";
 
 export interface FileNode {
   type: "file";

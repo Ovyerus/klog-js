@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Entry, Indentation } from "../src/entry";
+import { Entry } from "../src/entry";
 import { Range } from "../src/range";
 import { Time } from "../src/time";
 import { Duration } from "../src/duration";
@@ -55,11 +55,11 @@ describe("toString", () => {
   test("custom indentation", () => {
     const range = new Range(new Time(9, 0), new Time(17, 30));
     const entry1 = new Entry(range);
-    expect(entry1.toString(Indentation.TwoSpaces)).toEqual("  9:00 - 17:30");
+    expect(entry1.toString("  ")).toEqual("  9:00 - 17:30");
 
     const duration = new Duration(0, -31);
     const entry2 = new Entry(duration);
-    expect(entry2.toString(Indentation.Tab)).toEqual("\t-31m");
+    expect(entry2.toString("\t")).toEqual("\t-31m");
   });
 
   test("with summary", () => {
@@ -71,7 +71,7 @@ describe("toString", () => {
     const duration = Duration.fromMinutes(-90);
     const summary2 = new Summary(["Lunch break", "And also shopping"]);
     const entry2 = new Entry(duration, summary2);
-    expect(entry2.toString(Indentation.Tab)).toEqual(
+    expect(entry2.toString("\t")).toEqual(
       "\t-1h30m Lunch break\n\t\tAnd also shopping",
     );
 

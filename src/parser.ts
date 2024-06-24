@@ -255,6 +255,67 @@ interface ParseAST {
   <T extends keyof RuleToNode>(source: string, rule: T): RuleToNode[T];
 }
 
+/**
+ * Parses a Klog source string into an AST.
+ * @param source - The Klog source string to parse.
+ * @param rule - The grammar rule to apply. If not provided, defaults to "file". Provided mostly for testing.
+ * @throws {Error} The parsing failed.
+ * @example
+ * ```
+ * const source = `
+ * 2021-06-20
+ *   08:00 - 15:00 Work
+ *   -1h Lunch
+ * `;
+ * const ast = parseAST(source);
+ * console.log(JSON.stringify(ast, null, 2));
+ * // {
+ * //   "type": "file",
+ * //   "records": [
+ * //     {
+ * //       "type": "record",
+ * //       "date": "2021-06-19T14:00:00.000Z",
+ * //       "shouldTotal": null,
+ * //       "summary": null,
+ * //       "entries": [
+ * //         {
+ * //           "type": "entry",
+ * //           "value": {
+ * //             "type": "timeRange",
+ * //             "open": false,
+ * //             "format": 0,
+ * //             "start": {
+ * //               "type": "time",
+ * //               "hour": 8,
+ * //               "minute": 0,
+ * //               "shift": 0,
+ * //               "format": "24h"
+ * //             },
+ * //             "end": {
+ * //               "type": "time",
+ * //               "hour": 15,
+ * //               "minute": 0,
+ * //               "shift": 0,
+ * //               "format": "24h"
+ * //             }
+ * //           },
+ * //           "summary": "Work"
+ * //         },
+ * //         {
+ * //           "type": "entry",
+ * //           "value": {
+ * //             "type": "duration",
+ * //             "value": -60,
+ * //             "sign": "-"
+ * //           },
+ * //           "summary": "Lunch"
+ * //         }
+ * //       ]
+ * //     }
+ * //   ]
+ * // }
+ * ```
+ */
 export const parseAST = ((source, rule) => {
   if ((!source.trim() && !rule) || rule === "file")
     return { type: "file", records: [] };
@@ -265,6 +326,32 @@ export const parseAST = ((source, rule) => {
   else throw new Error(match.message);
 }) as ParseAST;
 
+/**
+ * Parses a Klog source string into an array of `Record` classes.
+ * @param source - The Klog source string to parse.
+ * @example
+ * ```
+ * const source = `
+ * 2021-06-20
+ *  08:00 - 15:00 Work
+ *  -1h Lunch
+ * `;
+ * const records = parse(source);
+ * console.log(records);
+ * // [
+ * //   Record {
+ * //     date: new Date('2021-06-20'),
+ * //     entries: [
+ * //       new Entry(new Range(new Time(8, 0), new Time(15, 0)), new Summary("Work")),
+ * //       new Entry(new Duration(-1, 0), new Summary("Lunch"))
+ * //     ],
+ * //     summary: null,
+ * //     shouldTotal: null,
+ * //     dateFormat: RecordDateFormat.Dashes
+ * //   }
+ * // ]
+ * ```
+ */
 export const parse = (source: string) => {
   const nodes = parseAST(source);
   return nodes.records.map(Record.fromAST);

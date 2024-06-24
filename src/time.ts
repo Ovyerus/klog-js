@@ -1,25 +1,37 @@
 import { Duration } from "./duration.js";
 import { TimeNode } from "./types.js";
 
+/**
+ * How a time should be formatted when turned into a string.
+ */
 export enum TimeFormat {
   TwentyFourHour = "24h",
   TwelveHour = "12h",
 }
 
+/**
+ * Which day a time should be assigned to.
+ */
 export enum DayShift {
   Yesterday = -1,
   Today = 0,
   Tomorrow = 1,
 }
 
-// TODO: add duration?
+/**
+ * A specific time of day.
+ */
 export class Time {
+  /**
+   * Create a new time.
+   * @throws {Error} The time values are invalid.
+   */
   constructor(
-    /** The hour of the time, in 24 hour time. */
+    /** The hour of the time, in 24-hour format. */
     public hour: number,
     /** The minute of the time. */
     public minute: number,
-    /** If the time belongs to the tomorrow or yesterday. */
+    /** If the time belongs to today, tomorrow, or yesterday. */
     public dayShift = DayShift.Today,
     /** The format to use for the time when rendering as a string. */
     public format = TimeFormat.TwentyFourHour,
@@ -37,24 +49,44 @@ export class Time {
     }
   }
 
+  /** @internal */
   static fromAST = (node: TimeNode) => {
     return new this(node.hour, node.minute, node.shift, node.format);
   };
 
+  /**
+   * Validates the time values.
+   * @param hour - The hour to validate.
+   * @param minute - The minute to validate.
+   * @param dayShift - The day shift to validate.
+   * @returns True if the time values are valid, false otherwise.
+   */
   static isValidValue(hour: number, minute: number, dayShift = DayShift.Today) {
     if (hour === 24 && minute === 0 && dayShift !== DayShift.Tomorrow)
       return true;
     else return hour <= 23 && hour >= 0 && minute <= 59 && minute >= 0;
   }
 
+  /**
+   * Check if this time is equal to another time.
+   * @param other - The time to compare against.
+   */
   equals(other: this) {
     return this.toMinutesSinceMidnight() === other.toMinutesSinceMidnight();
   }
 
+  /**
+   * Check if this time is after or equal to another time.
+   * @param other - The other time to compare against.
+   */
   afterOrEquals(other: this) {
     return this.toMinutesSinceMidnight() >= other.toMinutesSinceMidnight();
   }
 
+  /**
+   * Render the time as a Klog string.
+   * @param formatOverride - Optional override for the time format.
+   */
   toString(formatOverride?: TimeFormat) {
     const shiftPrefix = this.dayShift === DayShift.Yesterday ? "<" : "";
     const shiftSuffix = this.dayShift === DayShift.Tomorrow ? ">" : "";
@@ -79,6 +111,9 @@ export class Time {
     return `${shiftPrefix}${hour}:${minute}${periodSuffix}${shiftSuffix}`;
   }
 
+  /**
+   * Convert the time to a duration starting at midnight.
+   */
   toDurationSinceMidnight() {
     let hour = this.hour;
     let minute = this.minute;
@@ -93,6 +128,9 @@ export class Time {
     return new Duration(hour, minute);
   }
 
+  /**
+   * Convert the time to the amount of minutes since midnight.
+   */
   toMinutesSinceMidnight() {
     return this.toDurationSinceMidnight().toMinutes();
   }

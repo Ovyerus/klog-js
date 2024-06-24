@@ -1,7 +1,7 @@
 // TODO: check how Klog handles summaries (are new-lines kept as-is, or are
 // they stripped and then auto-added in serialisation?)
 
-import { Indentation } from "./entry.js";
+import { Indentation } from "./types.js";
 
 // Regex for extracting parts of a tag into named groups.
 const tagRe =
