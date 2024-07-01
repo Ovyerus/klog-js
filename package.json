@@ -4,6 +4,7 @@
   "type": "module",
   "description": "A JavaScript implementation of the Klog time tracking file format",
   "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "homepage": "https://github.com/Ovyerus/klog-js#readme",
   "bugs": "https://github.com/Ovyerus/klog-js/issues",
   "repository": {
