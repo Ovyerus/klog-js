@@ -23,9 +23,11 @@ jobs:
         run: |
           nix develop --command pnpm install &&
           nix develop --command pnpm generate:dev
+
       - name: Check Prettier
         run: nix develop --command pnpm format:check
         continue-on-error: true
+
       - name: Run tests
         run: nix develop --command pnpm test
 
