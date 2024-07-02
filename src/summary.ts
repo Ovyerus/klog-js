@@ -12,27 +12,31 @@ const splitRe =
 
 type TagMatch = { groups: { name: string; value?: string } } | null;
 
-export interface Tag {
+export interface SummaryTag {
   name: string;
   value?: string;
 }
 
-interface TextNode {
+export interface SummaryTextNode {
   type: "text";
   value: string;
 }
 
-interface EndOfLineNode {
+export interface SummaryEndOfLineNode {
   type: "end-of-line";
 }
 
-interface TagNode {
+export interface SummaryTagNode extends SummaryTag {
   type: "tag";
-  name: string;
-  value?: string;
 }
 
-export type SummaryAsTags = EndOfLineNode | TextNode | TagNode;
+export type SummaryAsNodes =
+  | SummaryEndOfLineNode
+  | SummaryTextNode
+  | SummaryTagNode;
+
+/** @deprecated Use {@link SummaryAsNodes} instead. */
+export type SummaryAsTags = SummaryAsNodes;
 
 // TODO: throw if any lines with blank characters
 export class Summary {
@@ -48,14 +52,14 @@ export class Summary {
   }
 
   get tags() {
-    const tags: Tag[] = [];
+    const tags: SummaryTag[] = [];
 
     for (const line of this.lines) {
       const matches = line.matchAll(tagRe);
       if (!matches) continue;
 
       for (const tag of matches) {
-        const toPush: Tag = { name: tag.groups!.name };
+        const toPush: SummaryTag = { name: tag.groups!.name };
         if (tag.groups!.value) toPush.value = tag.groups!.value;
 
         tags.push(toPush);
@@ -68,7 +72,7 @@ export class Summary {
   /** Split the summary into a list of text nodes and tag nodes, useful for rich
    * text formatting. */
   splitOnTags() {
-    const nodes: SummaryAsTags[] = [];
+    const nodes: SummaryAsNodes[] = [];
     const textSplitOnTags = this.lines.map((x) => x.split(splitRe));
 
     for (const [lineIndex, line] of textSplitOnTags.entries()) {
@@ -85,7 +89,7 @@ export class Summary {
           continue;
         }
 
-        const toPush: TagNode = { type: "tag", name: match.groups.name };
+        const toPush: SummaryTagNode = { type: "tag", name: match.groups.name };
         if (match.groups.value) toPush.value = match.groups.value;
 
         nodes.push(toPush);
