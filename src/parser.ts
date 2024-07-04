@@ -226,8 +226,8 @@ const mapping: KlogActionDict<KlogNode> = {
     };
   },
 
-  time_twentyFourHour(h1, h2, _, m1, m2): TimeNode {
-    const hour = parseInt([h1, h2].map((x) => x.toAST(mapping)).join(""), 10);
+  time_twentyFourHour(hr, _, m1, m2): TimeNode {
+    const hour = parseInt(hr.toAST(mapping), 10);
     const minute = parseInt(m1.toAST(mapping) + m2.toAST(mapping), 10);
 
     return {

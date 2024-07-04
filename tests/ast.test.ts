@@ -335,17 +335,34 @@ describe("times", () => {
 
     // Holdover from 12-hour time first
     test("treats 12 o'clock correctly", () => {
-      expect.soft(parseAST("12:00", "time")).toEqual({
+      expect(parseAST("12:00", "time")).toEqual({
         type: "time",
         hour: 12,
         minute: 0,
         format: TimeFormat.TwentyFourHour,
         shift: DayShift.Today,
       });
-      expect.soft(parseAST("12:31", "time")).toEqual({
+      expect(parseAST("12:31", "time")).toEqual({
         type: "time",
         hour: 12,
         minute: 31,
+        format: TimeFormat.TwentyFourHour,
+        shift: DayShift.Today,
+      });
+    });
+
+    test("supports single digit hour", () => {
+      expect(parseAST("0:47", "time")).toEqual({
+        type: "time",
+        hour: 0,
+        minute: 47,
+        format: TimeFormat.TwentyFourHour,
+        shift: DayShift.Today,
+      });
+      expect(parseAST("2:19", "time")).toEqual({
+        type: "time",
+        hour: 2,
+        minute: 19,
         format: TimeFormat.TwentyFourHour,
         shift: DayShift.Today,
       });
