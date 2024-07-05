@@ -598,7 +598,7 @@ describe("time ranges", () => {
           shift: DayShift.Tomorrow,
           hour: 1,
           minute: 30,
-          format: TimeFormat.TwelveHour,
+          format: TimeFormat.TwentyFourHour,
         },
       });
     });
@@ -663,6 +663,11 @@ describe("entries", () => {
     test("rejects invalid indentation", () => {
       expect(() => parseAST("\t  30m", "entry")).toThrow();
       expect(() => parseAST("     11m", "entry")).toThrow();
+    });
+
+    test("supports trailing spaces", () => {
+      expect(() => parseAST("    -29m ", "entry")).not.toThrow();
+      expect(() => parseAST("    -29m     ", "entry")).not.toThrow();
     });
   });
 

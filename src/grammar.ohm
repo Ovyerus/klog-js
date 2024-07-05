@@ -22,6 +22,7 @@ Klog {
 
   entrySummary = " " entrySummarySameLine -- same
                | newline entrySummaryNextLine -- next
+               | " " blankCharacter* -- empty
 
   // TODO: double check blank lines arent allowed here either
   // Entry summaries are allowed to wrap or start on the next line.
