@@ -16,84 +16,64 @@ import { DayShift, TimeFormat } from "./time.js";
 import { RangeDashFormat } from "./range.js";
 import { Record } from "./record.js";
 
-// TODO: enforcing consistent indents & newlines
-const mapping: KlogActionDict<KlogNode> = {
-  file(_, __, record1, ___, ____, records, _____, ______): FileNode {
-    return {
-      type: "file",
-      records: [record1.toAST(mapping)].concat(records.toAST(mapping)),
-    };
+const mapping: KlogActionDict<KlogNode | KlogNode[] | string> = {
+  file(_, records, __, ___, ____, _____): FileNode {
+    return { type: "file", records: records.toAST(mapping) ?? [] };
   },
 
-  record: (value) => value.toAST(mapping),
+  records(first, _, __, rest): RecordNode[] {
+    return [first.toAST(mapping), ...rest.toAST(mapping)];
+  },
 
-  record_summaryAndEntries(
-    recordHead,
-    _,
-    summary,
-    __,
-    entry1,
-    ___,
-    entries,
-  ): RecordNode {
+  record(head, _, summary, __, entries): RecordNode {
+    const recordEntries: EntryNode[] = entries.toAST(mapping) ?? [];
+    if (
+      recordEntries.filter(
+        (entry) => entry.value.type === "timeRange" && entry.value.open,
+      ).length > 1
+    )
+      throw new Error("Records can only have one open range at a time");
     return {
       type: "record",
-      ...recordHead.toAST(mapping),
+      ...head.toAST(mapping),
       summary: summary.toAST(mapping),
-      entries: [entry1.toAST(mapping)]
-        .concat(entries.toAST(mapping))
-        // Remove `null` (incase no entries are defined)
-        .filter((x) => x),
+      entries: recordEntries,
     };
   },
 
-  record_entries(recordHead, _, entry1, __, entries): RecordNode {
-    return {
-      type: "record",
-      ...recordHead.toAST(mapping),
-      summary: null,
-      entries: [entry1.toAST(mapping)]
-        .concat(entries.toAST(mapping))
-        // Remove `null` (incase no entries are defined)
-        .filter((x) => x),
-    };
-  },
-
-  record_summary(recordHead, _, summary): RecordNode {
-    return {
-      type: "record",
-      ...recordHead.toAST(mapping),
-      summary: summary.toAST(mapping),
-      entries: [],
-    };
-  },
-
-  record_empty(recordHead): RecordNode {
-    return {
-      type: "record",
-      ...recordHead.toAST(mapping),
-      summary: null,
-      entries: [],
-    };
-  },
-
-  recordHead(date, _, shouldTotal): any {
+  recordHead(date, _, shouldTotal, __, _eol): any {
     return {
       date: date.toAST(mapping),
       shouldTotal: shouldTotal.toAST(mapping),
     };
   },
-
   shouldTotal: (_, duration, __) => duration.toAST(mapping).value,
 
-  entry: (_, value, summary): EntryNode => ({
+  recordEntries: (entries) => entries.toAST(mapping),
+  entries(first, _, rest): EntryNode[] {
+    return [first.toAST(mapping), ...rest.toAST(mapping)];
+  },
+  entry: (value) => value.toAST(mapping),
+  indentedEntry: (_, value, summary): EntryNode => ({
     type: "entry",
     value: value.toAST(mapping),
     summary: summary.toAST(mapping),
   }),
 
-  recordSummary: (value) => value.toAST(mapping).trim(),
-  entrySummary: (value) => value.toAST(mapping).trim(),
+  recordSummary(_first, _newlines, _rest): string {
+    return this.sourceString.replaceAll("\r\n", "\n");
+  },
+  entrySummary: (value) => value.toAST(mapping),
+  entrySummary_same(_, text, continuation): string {
+    return [text.sourceString, ...continuation.toAST(mapping)].join("\n");
+  },
+  entrySummary_next(continuation): string {
+    return "\n" + continuation.toAST(mapping).join("\n");
+  },
+  continuation(_newline, _indent, _secondIndent, text): string {
+    return text.sourceString;
+  },
+  shiftedTime: (value) => value.toAST(mapping),
   timeRange: (range) => range.toAST(mapping),
 
   timeRange_open: (
@@ -138,7 +118,6 @@ const mapping: KlogActionDict<KlogNode> = {
 
   duration: (value) => value.toAST(mapping),
 
-  // TODO: how does klog do negatives
   duration_hour($sign, $value, _): DurationNode {
     const sign = $sign.toAST(mapping) || "";
     const mul = sign === "-" ? -1 : 1;
@@ -317,9 +296,6 @@ interface ParseAST {
  * ```
  */
 export const parseAST = ((source, rule) => {
-  if ((!source.trim() && !rule) || rule === "file")
-    return { type: "file", records: [] };
-
   const match = grammar.match(source, rule);
 
   if (match.succeeded()) return toAST(match, mapping);

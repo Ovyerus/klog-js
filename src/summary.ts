@@ -1,16 +1,4 @@
-// TODO: check how Klog handles summaries (are new-lines kept as-is, or are
-// they stripped and then auto-added in serialisation?)
-
 import { Indentation } from "./types.js";
-
-// Regex for extracting parts of a tag into named groups.
-const tagRe =
-  /#(?<name>[\p{L}\d_-]+)(?:=(?<value>(?:"[^"]*")|(?:'[^']*')|(?:[\p{L}\d_-]*)))?/gu;
-// Regex for splitting a string into parts that have tags and regular text separate.
-const splitRe =
-  /(#(?:[\p{L}\d_-]+)(?:=(?:(?:"[^"]*")|(?:'[^']*')|(?:[\p{L}\d_-]*)))?)/gu;
-
-type TagMatch = { groups: { name: string; value?: string } } | null;
 
 export interface SummaryTag {
   name: string;
@@ -38,6 +26,23 @@ export type SummaryAsNodes =
 /** @deprecated Use {@link SummaryAsNodes} instead. */
 export type SummaryAsTags = SummaryAsNodes;
 
+function tagMatches(line: string) {
+  // A fresh expression per call avoids shared lastIndex across summaries/helpers.
+  return line.matchAll(
+    /#(?<name>[\p{L}\d_-]+)(?:=(?<value>(?:"[^"]*")|(?:'[^']*')|(?:[\p{L}\d_-]*)))?/gu,
+  );
+}
+
+function tagFromMatch(match: RegExpMatchArray): SummaryTag {
+  const tag: SummaryTag = { name: match.groups!.name.toLowerCase() };
+  let value = match.groups!.value;
+  if (value?.startsWith('"') || value?.startsWith("'")) {
+    value = value.slice(1, -1);
+  }
+  if (value) tag.value = value;
+  return tag;
+}
+
 // TODO: throw if any lines with blank characters
 export class Summary {
   lines: string[];
@@ -55,15 +60,7 @@ export class Summary {
     const tags: SummaryTag[] = [];
 
     for (const line of this.lines) {
-      const matches = line.matchAll(tagRe);
-      if (!matches) continue;
-
-      for (const tag of matches) {
-        const toPush: SummaryTag = { name: tag.groups!.name };
-        if (tag.groups!.value) toPush.value = tag.groups!.value;
-
-        tags.push(toPush);
-      }
+      for (const match of tagMatches(line)) tags.push(tagFromMatch(match));
     }
 
     return tags;
@@ -73,29 +70,22 @@ export class Summary {
    * text formatting. */
   splitOnTags() {
     const nodes: SummaryAsNodes[] = [];
-    const textSplitOnTags = this.lines.map((x) => x.split(splitRe));
-
-    for (const [lineIndex, line] of textSplitOnTags.entries()) {
-      for (const [index, value] of line.entries()) {
-        // We don't care for empty text nodes at the start or end of each line.
-        const isEmptyTextAtFirstIndex = index === 0 && value === "";
-        const isEmptyTextAtLastIndex =
-          index === line.length - 1 && value === "";
-        if (isEmptyTextAtFirstIndex || isEmptyTextAtLastIndex) continue;
-
-        const match = tagRe.exec(value) as TagMatch;
-        if (!match) {
-          nodes.push({ type: "text", value });
-          continue;
+    for (const [lineIndex, line] of this.lines.entries()) {
+      let position = 0;
+      for (const match of tagMatches(line)) {
+        if (match.index > position) {
+          nodes.push({
+            type: "text",
+            value: line.slice(position, match.index),
+          });
         }
-
-        const toPush: SummaryTagNode = { type: "tag", name: match.groups.name };
-        if (match.groups.value) toPush.value = match.groups.value;
-
-        nodes.push(toPush);
+        nodes.push({ type: "tag", ...tagFromMatch(match) });
+        position = match.index + match[0].length;
       }
-
-      if (lineIndex !== textSplitOnTags.length - 1)
+      if (position < line.length) {
+        nodes.push({ type: "text", value: line.slice(position) });
+      }
+      if (lineIndex !== this.lines.length - 1)
         nodes.push({ type: "end-of-line" });
     }
 

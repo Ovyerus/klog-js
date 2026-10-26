@@ -681,7 +681,6 @@ describe("entries", () => {
 
     describe("wrapped summary", () => {
       test("one wrap", () => {
-        // TODO: see how Klog handles wraps... I don't feel like they should be like this
         expect(
           parseAST(
             "\t-120m This is a longer summary, which\n\t\tis continued on the next line.",
@@ -690,7 +689,7 @@ describe("entries", () => {
         ).toMatchObject({
           type: "entry",
           summary:
-            "This is a longer summary, which\n\t\tis continued on the next line.",
+            "This is a longer summary, which\nis continued on the next line.",
         });
       });
 
@@ -704,7 +703,7 @@ describe("entries", () => {
         ).toMatchObject({
           type: "entry",
           summary:
-            "First line\n\t\tSecond line with more\n\t\tThird line!!!\n\t\tYet another line woah.",
+            "First line\nSecond line with more\nThird line!!!\nYet another line woah.",
         });
       });
 

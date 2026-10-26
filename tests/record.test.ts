@@ -5,6 +5,7 @@ import { Time } from "../src/time";
 import { Range } from "../src/range";
 import { Duration } from "../src/duration";
 import { Summary } from "../src/summary";
+import { parse } from "../src/parser";
 
 // Just do a basic construction with nothing but a date
 test("initialising", () => {
@@ -15,6 +16,67 @@ test("initialising", () => {
   expect(record.entries).toHaveLength(0);
   expect(record.shouldTotal).toEqual(null);
   expect(record.dateFormat).toEqual(RecordDateFormat.Dashes);
+});
+
+describe("constructor open ranges", () => {
+  test("rejects two open ranges in one record", () => {
+    expect(
+      () =>
+        new Record(new Date(2024, 1, 14), [
+          new Entry(new Range(new Time(9, 0))),
+          new Entry(new Duration(30, 0)),
+          new Entry(new Range(new Time(13, 0))),
+        ]),
+    ).toThrow("Records can only have one open range at a time");
+  });
+
+  test("allows multiple closed ranges and one open range", () => {
+    const entries = [
+      new Entry(new Range(new Time(9, 0), new Time(10, 0))),
+      new Entry(new Range(new Time(11, 0), new Time(12, 0))),
+      new Entry(new Range(new Time(13, 0))),
+    ];
+    const record = new Record(new Date(2024, 1, 14), entries);
+    expect(record.entries).toBe(entries);
+    expect(record.openEntry).toBe(entries[2]);
+    expect(record.toMinutes()).toBe(120);
+  });
+
+  test("allows an open range in each separate record", () => {
+    const records = [
+      new Record(new Date(2024, 1, 14), [new Entry(new Range(new Time(9, 0)))]),
+      new Record(new Date(2024, 1, 15), [
+        new Entry(new Range(new Time(10, 0))),
+      ]),
+    ];
+    expect(records.map((record) => record.openEntry)).toEqual([
+      records[0].entries[0],
+      records[1].entries[0],
+    ]);
+  });
+});
+
+describe("explicit zero should totals", () => {
+  test("constructor retains and serializes an explicit zero", () => {
+    const target = new Duration(0, 0);
+    const record = new Record(new Date(2024, 1, 14), [], null, target);
+    expect(record.shouldTotal).toBe(target);
+    expect(record.toString()).toBe("2024-02-14 (0m!)\n");
+  });
+
+  test.each(["0m", "0h"])("parses and round trips (%s!)", (source) => {
+    const record = parse(`2024-02-14 (${source}!)\n    1h Work`)[0];
+    expect(record.shouldTotal).not.toBeNull();
+    expect(record.shouldTotal?.toMinutes()).toBe(0);
+    expect(record.toMinutes()).toBe(60);
+    expect(record.shouldTotalDiff().toMinutes()).toBe(60);
+    expect(record.toString()).toBe("2024-02-14 (0m!)\n    1h Work");
+    const reparsed = parse(record.toString())[0];
+    expect(reparsed.shouldTotal?.toMinutes()).toBe(0);
+    expect(reparsed.entries).toHaveLength(1);
+    expect(reparsed.toMinutes()).toBe(60);
+    expect(reparsed.toString()).toBe(record.toString());
+  });
 });
 
 describe("openEntry", () => {

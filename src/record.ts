@@ -31,7 +31,15 @@ export class Record {
     public shouldTotal: Duration | null = null,
     /** What dividers should be used for the date when using `toString` */
     public dateFormat = RecordDateFormat.Dashes,
-  ) {}
+  ) {
+    let hasOpenRange = false;
+    for (const entry of entries) {
+      if (!(entry.value instanceof Range && entry.value.open)) continue;
+      if (hasOpenRange)
+        throw new Error("Records can only have one open range at a time");
+      hasOpenRange = true;
+    }
+  }
 
   /** @internal */
   static fromAST = (node: RecordNode) => {
@@ -39,7 +47,7 @@ export class Record {
       node.date,
       node.entries.map(Entry.fromAST),
       node.summary ? new Summary(node.summary) : null,
-      node.shouldTotal ? Duration.fromMinutes(node.shouldTotal) : null,
+      node.shouldTotal !== null ? Duration.fromMinutes(node.shouldTotal) : null,
     );
   };
 
@@ -114,7 +122,7 @@ export class Record {
   toString() {
     // TODO: support windows newlines
     let headline = this.dateString;
-    if (this.shouldTotal?.toMinutes()) headline += ` (${this.shouldTotal}!)`;
+    if (this.shouldTotal !== null) headline += ` (${this.shouldTotal}!)`;
 
     const summary = this.summary
       ? this.summary.toString(null, false) + "\n"

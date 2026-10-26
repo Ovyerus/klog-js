@@ -42,19 +42,18 @@ describe("summaries with tags", () => {
 
     expect(summary.tags).toEqual([
       { name: "world" },
-      { name: "GREAT" },
+      { name: "great" },
       { name: "123_test" },
       { name: "234-foo" },
       { name: "太陽" },
       { name: "λουλούδι" },
       // { name: "पहाड" },
       { name: "мир" },
-      { name: "Léift" },
-      { name: "ΓΕΙΑ-ΣΑΣ" },
+      { name: "léift" },
+      { name: "γεια-σας" },
     ]);
   });
 
-  // TODO: strip quotes
   test("parses tags with values", () => {
     const summary = new Summary([
       '#foo=bar #tag="something cool" ignore me #empty=""',
@@ -63,12 +62,12 @@ describe("summaries with tags", () => {
 
     expect(summary.tags).toEqual([
       { name: "foo", value: "bar" },
-      { name: "tag", value: '"something cool"' },
-      { name: "empty", value: '""' },
-      { name: "aaa", value: "''" },
+      { name: "tag", value: "something cool" },
+      { name: "empty" },
+      { name: "aaa" },
       { name: "project", value: "KLG-123" },
       { name: "no-value" },
-      { name: "crazy", value: "'v!a?l,u=e'" },
+      { name: "crazy", value: "v!a?l,u=e" },
     ]);
   });
 
@@ -82,7 +81,7 @@ describe("summaries with tags", () => {
 
     const summary2 = new Summary("#Badminton session (at the #gym)");
     expect.soft(summary2.splitOnTags()).toEqual([
-      { type: "tag", name: "Badminton" },
+      { type: "tag", name: "badminton" },
       { type: "text", value: " session (at the " },
       { type: "tag", name: "gym" },
       { type: "text", value: ")" },
@@ -99,11 +98,73 @@ describe("summaries with tags", () => {
       .soft(summary4.splitOnTags())
       .toEqual([
         { type: "text", value: "Phone " },
-        { type: "tag", name: "call", value: '"Liz Jones"' },
+        { type: "tag", name: "call", value: "Liz Jones" },
         { type: "end-of-line" },
         { type: "text", value: "Weekly " },
         { type: "tag", name: "catchup" },
       ]);
+  });
+  test("repeated and interleaved calls do not share matcher state", () => {
+    const first = new Summary("#A#B\n#C");
+    const second = new Summary("before #Other after");
+    const firstTags = [{ name: "a" }, { name: "b" }, { name: "c" }];
+    const firstNodes = [
+      { type: "tag", name: "a" },
+      { type: "tag", name: "b" },
+      { type: "end-of-line" },
+      { type: "tag", name: "c" },
+    ];
+    for (let i = 0; i < 3; i++) {
+      expect(first.splitOnTags()).toEqual(firstNodes);
+      expect(second.tags).toEqual([{ name: "other" }]);
+      expect(first.tags).toEqual(firstTags);
+      expect(second.splitOnTags()).toEqual([
+        { type: "text", value: "before " },
+        { type: "tag", name: "other" },
+        { type: "text", value: " after" },
+      ]);
+    }
+  });
+
+  test("interprets quoted values while leaving raw lines and text intact", () => {
+    const source = `Start #Office #project="Ab/c"#EMPTY=''\n#Single='a=b' #double="A B" end`;
+    const summary = new Summary(source);
+    expect(summary.tags).toEqual([
+      { name: "office" },
+      { name: "project", value: "Ab/c" },
+      { name: "empty" },
+      { name: "single", value: "a=b" },
+      { name: "double", value: "A B" },
+    ]);
+    expect(summary.splitOnTags()).toEqual([
+      { type: "text", value: "Start " },
+      { type: "tag", name: "office" },
+      { type: "text", value: " " },
+      { type: "tag", name: "project", value: "Ab/c" },
+      { type: "tag", name: "empty" },
+      { type: "end-of-line" },
+      { type: "tag", name: "single", value: "a=b" },
+      { type: "text", value: " " },
+      { type: "tag", name: "double", value: "A B" },
+      { type: "text", value: " end" },
+    ]);
+    expect(summary.lines).toEqual(source.split("\n"));
+    expect(summary.toString()).toBe(source);
+  });
+
+  test("leaves unfinished quotes as text following a valueless tag", () => {
+    const summary = new Summary(`#TODO="unfinished\n#OTHER='also unfinished`);
+    expect(summary.tags).toEqual([{ name: "todo" }, { name: "other" }]);
+    expect(summary.splitOnTags()).toEqual([
+      { type: "tag", name: "todo" },
+      { type: "text", value: '"unfinished' },
+      { type: "end-of-line" },
+      { type: "tag", name: "other" },
+      { type: "text", value: "'also unfinished" },
+    ]);
+    expect(summary.toString()).toBe(
+      `#TODO="unfinished\n#OTHER='also unfinished`,
+    );
   });
 });
 

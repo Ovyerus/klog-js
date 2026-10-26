@@ -1,34 +1,28 @@
 Klog {
-  // TODO: allow blankCharacters between records
-  file = (" "* newline)* record (newline newline+ record)* newline* end
+  file = blankLine* records? newline? blankLine* blankCharacter* end
+  records = record (newline blankLine+ record)*
+  blankLine = blankCharacter* newline
 
-  // record = date (" " shouldTotal)? newline (~(blankCharacter+) recordSummary eol)? (entry (newline entry)*)?
-  record = recordHead newline recordSummary newline (entry (newline entry)*) -- summaryAndEntries
-         | recordHead newline (entry (newline entry)*) -- entries
-         | recordHead newline recordSummary -- summary
-         | recordHead -- empty
-
-  recordHead = date (" " shouldTotal)?
-  
+  record = recordHead (newline recordSummary)? (newline recordEntries)?
+  recordHead = date (" "+ shouldTotal)? " "* &eol
   shouldTotal = "(" duration "!)"
 
-  entry = indent (duration | timeRange) entrySummary?
+  // The first entry establishes one indentation unit for this record.
+  // Try longer units first so four spaces are not mistaken for two levels.
+  recordEntries = entries<"    "> | entries<"   "> | entries<"  "> | entries<"\t">
+  entries<i> = indentedEntry<i> (newline indentedEntry<i>)*
+  entry = indentedEntry<"    "> | indentedEntry<"   "> | indentedEntry<"  "> | indentedEntry<"\t">
+  indentedEntry<i> = i (duration | timeRange) entrySummary<i>?
 
-  // TODO: probably see if we can simplify summary parsing, double check what Klog does
-
-  recordSummary = summaryChar (~(any newline) any)* (~newline any) newline recordSummary -- wrap
-                 | summaryChar (~(any eol) any)* (~eol any) &eol -- single
+  recordSummary = recordSummaryLine (newline recordSummaryLine)*
+  recordSummaryLine = summaryChar lineText
   summaryChar = ~(blankCharacter | newline) any
+  lineText = (~newline any)*
 
-  entrySummary = " " entrySummarySameLine -- same
-               | newline entrySummaryNextLine -- next
-               | " " blankCharacter* -- empty
-
-  // TODO: double check blank lines arent allowed here either
-  // Entry summaries are allowed to wrap or start on the next line.
-  entrySummarySameLine = (~(any newline) any)* (~newline any) newline indent indent entrySummarySameLine -- wrap
-                       | (~(any eol) any)* (~eol any) &eol -- single
-  entrySummaryNextLine = indent indent entrySummarySameLine
+  entrySummary<i> = " " lineText continuation<i>* -- same
+                  | continuation<i>+ -- next
+  continuation<i> = newline i i nonblankText
+  nonblankText = ~(blankCharacter* eol) lineText
 
   date = digit digit digit digit "-" digit digit "-" digit digit
        | digit digit digit digit "/" digit digit "/" digit digit
@@ -37,9 +31,10 @@ Klog {
            | ("-" | "+")? digit+ "h" -- hour
            | ("-" | "+")? digit+ "m" -- minute
 
-  timeRange = (backwardsShiftedTime | time) " "* "-" " "* "?"+ -- open
-            | (backwardsShiftedTime | time) " "* "-" " "* (forwardsShiftedTime | time) -- closed
+  timeRange = shiftedTime " "* "-" " "* "?"+ -- open
+            | shiftedTime " "* "-" " "* shiftedTime -- closed
 
+  shiftedTime = backwardsShiftedTime | forwardsShiftedTime | time
   backwardsShiftedTime = "<" time
   forwardsShiftedTime = time ">"
 
@@ -53,10 +48,7 @@ Klog {
   period = "am" | "pm"
   eol = newline | end
   newline = "\n" | "\r\n"
-  indent = (" ") (" ") (" ")? (" ")? -- spaces
-         | "\t"
 
-  // TODO: comprehensive tests around these and summaries.
   // Characters as defined in the Unicode "Space Separator" category, and tab.
   blankCharacter = "\t"
                  | " "
