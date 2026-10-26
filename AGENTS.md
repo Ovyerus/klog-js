@@ -25,6 +25,8 @@ in browsers; avoid introducing Node-only APIs into `src/`.
   these as a fix; regenerate them from the grammar.
 - `tests/parser-compatibility.test.ts`: whole-file boundary, whitespace,
   indentation, shifted range, and summary round-trip regressions.
+- `tests/warnings.test.ts`: opt-in record warning categories, reference times,
+  day shifts, and non-mutation guarantees.
 
 ## Documentation
 
@@ -89,6 +91,7 @@ using `toEqual` may ignore formatting options. Assert those options or rendered
 strings explicitly when they matter.
 
 Keep the library's own JSON representation distinct from upstream `klog json`.
-Upstream JSON compatibility and record warnings are README TODOs, not existing
-API guarantees. Do not add CLI commands or dependencies merely to mirror a new
-upstream CLI release.
+Upstream JSON compatibility is a README TODO, not an existing API guarantee.
+Record warnings are opt-in via `Record.getWarnings({ now })`; keep warning
+checks non-mutating and distinct from parser validation. Do not add CLI commands
+or dependencies merely to mirror a new upstream CLI release.

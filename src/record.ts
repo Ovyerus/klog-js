@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { differenceInCalendarDays, format, isValid } from "date-fns";
 import { Duration } from "./duration.js";
 import { Entry } from "./entry.js";
 import { Range } from "./range.js";
@@ -12,8 +12,40 @@ export enum RecordDateFormat {
 }
 
 // TODO: `normalise` to apply sweeping format changes throughout the tree (dash spacing, am/pm or 24 hour, explicit duration +, etc)
-// TODO: method for getting warnings about record (e.g. overlapping time ranges). See what Klog handles.
 // TODO: maybe always just use string/string[] in summaries rather than forcing the user to submit a Summary class.
+
+/** Stable warning categories, matching the upstream klog checker names. */
+export type RecordWarningCode =
+  | "UNCLOSED_OPEN_RANGE"
+  | "FUTURE_ENTRIES"
+  | "OVERLAPPING_RANGES"
+  | "MORE_THAN_24H";
+
+export interface RecordWarning {
+  code: RecordWarningCode;
+  message: string;
+}
+
+export interface RecordWarningOptions {
+  /** Reference time in the local timezone. Defaults to the current time. */
+  now?: Date;
+}
+
+function hasOverlappingRanges(entries: Entry[]): boolean {
+  const ranges: { start: number; end: number }[] = [];
+  for (const entry of entries) {
+    if (!(entry.value instanceof Range)) continue;
+    const start = entry.value.start.toMinutesSinceMidnight();
+    // Upstream's best guess for an open end is 23:59 on the record's day.
+    const end = entry.value.end?.toMinutesSinceMidnight() ?? 23 * 60 + 59;
+    // Point-in-time ranges do not overlap; shifted open starts may be past end.
+    if (start < end) ranges.push({ start, end });
+  }
+  ranges.sort((a, b) => a.start - b.start);
+  return ranges.some(
+    (range, index) => index > 0 && range.start < ranges[index - 1].end,
+  );
+}
 
 /**
  * A block of time entries for any given day.
@@ -114,6 +146,62 @@ export class Record {
    */
   toDuration() {
     return Duration.fromMinutes(this.toMinutes());
+  }
+
+  /**
+   * Check for likely mistakes without changing this record or its totals.
+   * Returns at most one warning per category, in RecordWarningCode order above.
+   * Future times have a 30-minute grace period; durations are future only when
+   * their record date is in the future. Open ranges are stale before yesterday.
+   * Yesterday's open range is left alone because this method has no other-record
+   * context. Overlap checks assume an open end of 23:59, as upstream does.
+   * Time/shift comparisons use local calendar days and wall-clock minutes.
+   * @throws {Error} The record date or reference date is invalid.
+   */
+  getWarnings({
+    now = new Date(),
+  }: RecordWarningOptions = {}): RecordWarning[] {
+    if (!isValid(now)) throw new Error("Invalid warning reference date");
+    if (!isValid(this.date)) throw new Error("Invalid record date");
+
+    const warnings: RecordWarning[] = [];
+    const dayOffset = differenceInCalendarDays(this.date, now);
+    if (dayOffset < -1 && this.openEntry) {
+      warnings.push({
+        code: "UNCLOSED_OPEN_RANGE",
+        message: "Unclosed open range",
+      });
+    }
+
+    // Work in whole minutes, including the first minute beyond the grace period.
+    const futureThreshold = now.getHours() * 60 + now.getMinutes() + 31;
+    const isFuture = (time: Time) =>
+      dayOffset * 24 * 60 + time.toMinutesSinceMidnight() >= futureThreshold;
+    if (
+      this.entries.some((entry) => {
+        if (!(entry.value instanceof Range)) return dayOffset > 0;
+        return (
+          isFuture(entry.value.start) ||
+          (entry.value.end !== null && isFuture(entry.value.end))
+        );
+      })
+    ) {
+      warnings.push({ code: "FUTURE_ENTRIES", message: "Entry in the future" });
+    }
+
+    if (hasOverlappingRanges(this.entries)) {
+      warnings.push({
+        code: "OVERLAPPING_RANGES",
+        message: "Overlapping time ranges",
+      });
+    }
+    if (this.toMinutes() > 24 * 60) {
+      warnings.push({
+        code: "MORE_THAN_24H",
+        message: "Total time exceeds 24 hours",
+      });
+    }
+    return warnings;
   }
 
   /**

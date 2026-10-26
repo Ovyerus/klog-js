@@ -56,6 +56,40 @@ const record = new Record(new Date(2024, 1, 24), [
 */
 ```
 
+### Checking records for likely mistakes
+
+Warnings are opt-in and do not change records, parsing, or calculated totals:
+
+```js
+const [record] = parse(`2024-05-05
+    8:00 - 10:00
+    9:00 - 11:00
+`);
+
+record.getWarnings({ now: new Date(2024, 4, 5, 12, 0) });
+// [{ code: "OVERLAPPING_RANGES", message: "Overlapping time ranges" }]
+```
+
+Omit `now` to use the current time. Dates and shifted times are interpreted
+using local calendar days and wall-clock minutes. The result contains at most
+one `{ code, message }` object per category, in this order:
+
+- `UNCLOSED_OPEN_RANGE`: an open range on a record dated before yesterday.
+- `FUTURE_ENTRIES`: a range endpoint/open start more than 30 whole minutes in
+  the future, or a duration on a future record date. Empty future records do not
+  warn.
+- `OVERLAPPING_RANGES`: intersecting ranges; touching endpoints and zero-length
+  ranges do not count. As in upstream klog, open ranges are provisionally
+  treated as ending at 23:59 on the record's day for this check only. An open
+  start at or after that boundary is ignored by the overlap check.
+- `MORE_THAN_24H`: the record's net total exceeds 24 hours. Negative durations
+  deduct from the total, and open ranges still contribute zero.
+
+These are hints, not validation errors: overlaps and large totals remain valid
+klog data. `getWarnings()` examines one record only; unlike upstream's
+collection-level checker, it cannot warn about yesterday's open range based on
+the presence of another record today. An invalid record date or `now` throws.
+
 ## Klog Format
 
 The Klog file format is a plain-text format for time tracking. For detailed
@@ -66,7 +100,7 @@ information on the Klog format, visit the
 
 - [ ] Automatic wrapping of summary lines?
 - [ ] Applying the same formatting options across all entries in a record.
-- [ ] Get warnings for a record (similar to how Klog does).
+- [x] Get warnings for a record (similar to how Klog does).
 - [ ] `toKlogJSON` for classes that returns an object compatible with
       `klog json`.
 - [ ] Other miniscule fixes around formatting, especially with summaries.
