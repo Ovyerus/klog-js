@@ -14,6 +14,6 @@
     defaultForSystems = fn: forSystems (pkgs: {default = fn pkgs;});
   in {
     packages = defaultForSystems (pkgs: pkgs.callPackage ./package.nix {});
-    devShells = defaultForSystems (pkgs: with pkgs; mkShell {buildInputs = [nodejs pnpm];});
+    devShells = defaultForSystems (pkgs: with pkgs; mkShell {buildInputs = [nodejs pnpm_10];});
   };
 }

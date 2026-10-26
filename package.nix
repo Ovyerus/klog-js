@@ -2,7 +2,9 @@
   lib,
   stdenv,
   nodejs,
-  pnpm,
+  pnpm_10,
+  fetchPnpmDeps,
+  pnpmConfigHook,
 }: let
   packageJSON = builtins.fromJSON (builtins.readFile ./package.json);
 in
@@ -12,12 +14,14 @@ in
 
     src = lib.cleanSource ./.;
 
-    pnpmDeps = pnpm.fetchDeps {
+    pnpmDeps = fetchPnpmDeps {
       inherit (finalAttrs) pname version src;
-      hash = "sha256-obhyw372EMvr/jtQzWTYhis1rflxKbg7j9WoBJ+bzpA=";
+      pnpm = pnpm_10;
+      fetcherVersion = 5;
+      hash = "sha256-BlxyaIw4mDVawGSTQg205UN8OdAiX43QRdpIxIylmqo=";
     };
 
-    nativeBuildInputs = [nodejs pnpm.configHook];
+    nativeBuildInputs = [nodejs pnpm_10 pnpmConfigHook];
 
     buildPhase = ''
       runHook preBuild
