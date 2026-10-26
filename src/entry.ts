@@ -14,6 +14,8 @@ export interface EntryFormatOptions {
   openRangePlaceholderCharCount?: number;
   /** Applied to duration entries; omitted properties retain their stored values. */
   duration?: DurationOptions;
+  /** Soft full-line width for summaries, including indentation and entry value. */
+  summaryWrapWidth?: number;
 }
 
 /**
@@ -106,7 +108,12 @@ export class Entry {
               options.openRangePlaceholderCharCount,
           });
     const summary = this.summary
-      ? " " + this.summary.toString(indent, false)
+      ? " " +
+        this.summary.toString({
+          indentation: indent,
+          wrapWidth: options.summaryWrapWidth,
+          firstLineOffset: (indent?.length ?? 0) + value.length + 1,
+        })
       : "";
     return `${indent || ""}${value}${summary}`;
   }

@@ -29,6 +29,8 @@ in browsers; avoid introducing Node-only APIs into `src/`.
   day shifts, and non-mutation guarantees.
 - `tests/formatting.test.ts`: non-mutating render overrides, legacy entry
   indentation arguments, option propagation, and formatted round trips.
+- `tests/wrapping.test.ts`: opt-in full-line budgets, raw tag protection, layout
+  preservation, non-mutation, and wrapped parse/render round trips.
 - `tests/klog-json.test.ts`: required live comparisons against upstream
   `klog json` with isolated config and temporary inputs. `KLOG_BIN` can select
   another executable; missing upstream tooling must fail, not silently skip.
@@ -95,6 +97,13 @@ separate records.
 `tests/setup.ts` installs a custom equality tester for `Duration`; assertions
 using `toEqual` may ignore formatting options. Assert those options or rendered
 strings explicitly when they matter.
+
+Summary wrapping is opt-in via `summaryWrapWidth` on record/entry rendering or
+`wrapWidth` in `SummaryFormatOptions`. Keep it in `Summary`, render-only, and
+separate from JSON conversion. Width counts full-line Unicode code points (tabs
+count as one), not terminal display columns. Preserve explicit breaks and raw
+quoted tags; do not split words, merge paragraphs, or mutate stored lines. Entry
+prefix budgets must use the actual formatted value and selected indentation.
 
 Keep the library's own JSON representation distinct from upstream `klog json`.
 `Record.toKlogJSON()`, `Entry.toKlogJSON()`, and `Summary.toKlogJSON()` target

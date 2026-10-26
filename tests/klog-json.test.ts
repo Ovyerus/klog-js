@@ -229,3 +229,37 @@ describe("plain detached JSON values", () => {
     expect(value.toKlogJSON()).toEqual(upstream(value.toString()).records[0]);
   });
 });
+
+// Wrapping is a local rendering policy, not an upstream formatting guarantee.
+// Verify both parsers agree on the resulting file, including complete tag values.
+describe("wrapped output accepted by upstream", () => {
+  for (const indentation of ["  ", "   ", "    ", "\t"] as const) {
+    for (const newline of ["\n", "\r\n"] as const) {
+      test.each([1, 24, 40])(
+        `accepts ${JSON.stringify(indentation)}, ${JSON.stringify(newline)}, width %i`,
+        (summaryWrapWidth) => {
+          const value = parse(`2000-01-01 (0m!)
+Record summary with #Project="two words" and more words
+    <23:00 - 1:00 Range summary (#Topic='a b') with more words
+          aligned continuation with more words
+    -2h Negative duration summary
+    4:00pm - ???
+        Next-line summary #Status="still working" and more words`)[0];
+          const text = value.toString({
+            indentation,
+            newline,
+            summaryWrapWidth,
+            timeFormat: TimeFormat.TwelveHour,
+          });
+          const reparsed = parse(text)[0];
+          expect(upstream(text).records).toEqual([reparsed.toKlogJSON()]);
+          expect(reparsed.toMinutes()).toBe(value.toMinutes());
+          expect(reparsed.toKlogJSON().tags).toEqual(value.toKlogJSON().tags);
+          expect(reparsed.entries.map((e) => e.toKlogJSON().tags)).toEqual(
+            value.entries.map((e) => e.toKlogJSON().tags),
+          );
+        },
+      );
+    }
+  }
+});

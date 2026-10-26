@@ -1,5 +1,15 @@
 import { Indentation, KlogSummaryJSON } from "./types.js";
 
+/** Render-only summary layout. Widths count Unicode code points, tabs included as one. */
+export interface SummaryFormatOptions {
+  indentation?: Indentation | null;
+  startOnNextLine?: boolean;
+  /** Soft maximum for the entire rendered line; words and tags are never split. */
+  wrapWidth?: number;
+  /** Characters already rendered before the first line, e.g. an entry's value. */
+  firstLineOffset?: number;
+}
+
 export interface SummaryTag {
   name: string;
   value?: string;
@@ -74,6 +84,62 @@ function compareCodePoints(a: string, b: string): number {
   return a.length - b.length;
 }
 
+function codePointLength(text: string): number {
+  let length = 0;
+  for (const _ of text) length++;
+  return length;
+}
+
+/** Wrap one explicit line, considering only spaces/tabs outside raw tags. */
+function wrapLine(
+  line: string,
+  width: number,
+  firstOffset: number,
+  continuationOffset: number,
+): string[] {
+  const leading = line.match(/^[ \t]*/)![0];
+  const bodyEnd = line.length - line.match(/[ \t]*$/)![0].length;
+  if (leading.length >= bodyEnd) return [line];
+
+  const tags = tagMatches(line);
+  let tag = tags.next().value;
+  const result: string[] = [];
+  let parts = [leading];
+  let column = firstOffset + leading.length;
+  let hasWord = false;
+  let wordStart = leading.length;
+  let separator = "";
+
+  const appendWord = (end: number) => {
+    const word = line.slice(wordStart, end);
+    const length = codePointLength(word);
+    if (hasWord && column + separator.length + length > width) {
+      result.push(parts.join(""));
+      parts = [leading, word];
+      column = continuationOffset + leading.length + length;
+    } else {
+      parts.push(separator, word);
+      column += separator.length + length;
+    }
+    hasWord = true;
+  };
+
+  for (const gap of line.matchAll(/[ \t]+/g)) {
+    if (gap.index < leading.length || gap.index >= bodyEnd) continue;
+    while (tag && tag.index + tag[0].length <= gap.index)
+      tag = tags.next().value;
+    if (tag && gap.index >= tag.index && gap.index < tag.index + tag[0].length)
+      continue;
+    appendWord(gap.index);
+    separator = gap[0];
+    wordStart = gap.index + gap[0].length;
+  }
+  appendWord(bodyEnd);
+  parts.push(line.slice(bodyEnd));
+  result.push(parts.join(""));
+  return result;
+}
+
 // TODO: throw if any lines with blank characters
 export class Summary {
   lines: string[];
@@ -135,13 +201,53 @@ export class Summary {
     return { summary, tags: tags.sort(compareCodePoints) };
   }
 
-  toString(indentation: Indentation | null = null, startOnNextLine = false) {
-    const indent = (l: string, i: number) =>
-      i !== 0 || startOnNextLine ? `${(indentation || "").repeat(2)}${l}` : l;
+  /** Render without modifying lines. Legacy indentation/start arguments still work.
+   * Opt-in wrapping preserves explicit breaks, alignment, and complete raw tags;
+   * normalizes CRLF to LF; and may exceed the width for indivisible words/prefixes.
+   */
+  toString(
+    indentOrOptions: Indentation | null | SummaryFormatOptions = null,
+    startOnNextLine = false,
+  ): string {
+    const options: SummaryFormatOptions =
+      typeof indentOrOptions === "object" && indentOrOptions !== null
+        ? indentOrOptions
+        : { indentation: indentOrOptions, startOnNextLine };
+    const nextLine = options.startOnNextLine ?? false;
+    const continuation = (options.indentation || "").repeat(2);
+    const { wrapWidth, firstLineOffset = 0 } = options;
+    if (
+      wrapWidth !== undefined &&
+      (!Number.isSafeInteger(wrapWidth) || wrapWidth <= 0)
+    )
+      throw new RangeError(
+        "Summary wrap width must be a positive safe integer",
+      );
+    if (!Number.isSafeInteger(firstLineOffset) || firstLineOffset < 0)
+      throw new RangeError(
+        "Summary first-line offset must be a non-negative safe integer",
+      );
 
+    let lines = this.lines;
+    if (wrapWidth !== undefined && lines.length > 0) {
+      lines = lines
+        .join("\n")
+        .replace(/\r\n/g, "\n")
+        .split("\n")
+        .flatMap((line, i) =>
+          wrapLine(
+            line,
+            wrapWidth,
+            i === 0 && !nextLine ? firstLineOffset : continuation.length,
+            continuation.length,
+          ),
+        );
+    }
     return (
-      (startOnNextLine ? "\n" : "") +
-      this.lines.map((l, i) => indent(l, i)).join("\n")
+      (nextLine ? "\n" : "") +
+      lines
+        .map((line, i) => (i !== 0 || nextLine ? continuation + line : line))
+        .join("\n")
     );
   }
 }

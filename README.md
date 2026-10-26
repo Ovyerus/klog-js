@@ -91,6 +91,7 @@ formatting or the existing defaults:
 | `duration`                      | `{ explicitPositive, zeroSign }`, applied to duration entries and the should-total. `zeroSign` is `""`, `"+"`, or `"-"` and is independent of `explicitPositive`. |
 | `dateFormat`                    | `RecordDateFormat.Dashes` or `RecordDateFormat.Slashes`.                                                                                                          |
 | `newline`                       | `"\n"` or `"\r\n"`; when supplied, normalizes line breaks throughout the output.                                                                                  |
+| `summaryWrapWidth`              | Positive safe integer: soft full-line width for record and entry summaries, including indentation and entry prefixes.                                             |
 | `openRangePlaceholderCharCount` | Positive safe integer controlling the number of `?` characters in an open range.                                                                                  |
 
 Existing no-argument calls keep their behavior. Standalone entries accept the
@@ -99,6 +100,52 @@ same entry-related options, while preserving `entry.toString("\t")` and
 `Duration.toString({ explicitPositive, zeroSign })` and
 `Range.toString({ format, timeFormat, openRangePlaceholderCharCount })` also
 accept per-render overrides. Summary wrapping is not performed automatically.
+
+### Wrapping summaries (opt-in)
+
+Set `summaryWrapWidth` to wrap record and entry summaries during rendering:
+
+```js
+const [record] = parse(`2024-05-05
+alpha beta gamma delta
+    1h alpha beta gamma delta
+`);
+
+record.toString({ indentation: "  ", summaryWrapWidth: 15 });
+// 2024-05-05
+// alpha beta
+// gamma delta
+//   1h alpha beta
+//     gamma delta
+```
+
+This does not change the record, its summaries, tags, totals, or JSON output.
+Omit the option to retain the original formatting. Standalone entries accept
+`summaryWrapWidth` too.
+
+- The width counts the **whole rendered line**, including indentation and the
+  formatted duration/range prefix, not just summary text. Headers are not
+  wrapped.
+- Width is measured in Unicode code points, with a tab counting as one
+  character; it is not a terminal display-column measurement.
+- Wrapping is greedy at spaces/tabs outside tags. Complete quoted tag values,
+  adjacent tags, URLs, and other unbroken words are never split or
+  canonicalized.
+- The limit is **soft**: an indivisible word/tag, a long entry prefix, or
+  preserved alignment/trailing whitespace can exceed it. No empty line is
+  inserted merely to move the first word after a long prefix.
+- Explicit line breaks are retained, not joined into paragraphs. Leading
+  alignment is repeated on wrapped continuations; other spaces/tabs are
+  preserved except the separating run replaced by a wrap.
+- Wrapped summaries normalize CRLF to LF. Use `newline: "\r\n"` on the record to
+  render CRLF throughout.
+
+For standalone summaries, `Summary.toString()` accepts a `SummaryFormatOptions`
+object: `{ wrapWidth, indentation, startOnNextLine, firstLineOffset }`.
+`firstLineOffset` is the non-negative safe-integer character count of an
+embedding prefix (normally zero; entries supply it automatically). Continuations
+use two indentation units. Existing
+`summary.toString(indentation, startOnNextLine)` calls remain supported.
 
 ### Exporting upstream-compatible JSON
 
@@ -179,7 +226,7 @@ information on the Klog format, visit the
 
 ## TODO
 
-- [ ] Automatic wrapping of summary lines?
+- [x] Opt-in wrapping of summary lines.
 - [x] Applying the same formatting options across all entries in a record.
 - [x] Get warnings for a record (similar to how Klog does).
 - [x] `toKlogJSON` for classes that returns an object compatible with

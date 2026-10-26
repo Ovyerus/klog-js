@@ -255,7 +255,7 @@ export class Record {
       headline += ` (${this.shouldTotal.toString(options.duration)}!)`;
 
     const summary = this.summary
-      ? this.summary.toString(null, false) + "\n"
+      ? this.summary.toString({ wrapWidth: options.summaryWrapWidth }) + "\n"
       : "";
     const entries = this.entries.map((e) => e.toString(options)).join("\n");
     const text = headline + "\n" + summary + entries;
