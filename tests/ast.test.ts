@@ -21,6 +21,18 @@ const someEntries = await readCorpus("some-entries.klg");
 const sameDay = await readCorpus("same-day.klg");
 
 describe("full files", () => {
+  test.each([
+    ["not a record", 1],
+    ["2024-05-05\n    25:00 - 26:00", 2],
+  ] as const)(
+    "preserves Ohm diagnostics for rejected input %j",
+    (source, line) => {
+      expect(() => parseAST(source)).toThrow(
+        new RegExp(`Line ${line}, col \\d+:[\\s\\S]*Expected`),
+      );
+    },
+  );
+
   test("parses file with single record", () => {
     const result = parseAST(singleRecord);
     expect(result).toEqual(singleResult);

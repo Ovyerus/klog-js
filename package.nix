@@ -18,7 +18,7 @@ in
       inherit (finalAttrs) pname version src;
       pnpm = pnpm_10;
       fetcherVersion = 5;
-      hash = "sha256-BlxyaIw4mDVawGSTQg205UN8OdAiX43QRdpIxIylmqo=";
+      hash = "sha256-Y9aAx2fE07+DdKX0e0FwRKtzHaUzXZCxZbyjT8Ia27I=";
     };
 
     nativeBuildInputs = [nodejs pnpm_10 pnpmConfigHook];

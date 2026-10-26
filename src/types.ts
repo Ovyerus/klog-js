@@ -85,9 +85,7 @@ export interface KlogClosedRangeEntryJSON extends KlogEntryJSONBase {
 }
 
 export type KlogEntryJSON =
-  | KlogDurationEntryJSON
-  | KlogOpenRangeEntryJSON
-  | KlogClosedRangeEntryJSON;
+  KlogDurationEntryJSON | KlogOpenRangeEntryJSON | KlogClosedRangeEntryJSON;
 
 /** One object inside `klog json`'s records array, not the CLI envelope. */
 export interface KlogRecordJSON extends KlogSummaryJSON {
@@ -102,9 +100,4 @@ export interface KlogRecordJSON extends KlogSummaryJSON {
 }
 
 export type KlogNode =
-  | FileNode
-  | RecordNode
-  | EntryNode
-  | TimeRangeNode
-  | TimeNode
-  | DurationNode;
+  FileNode | RecordNode | EntryNode | TimeRangeNode | TimeNode | DurationNode;

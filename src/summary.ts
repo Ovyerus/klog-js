@@ -29,9 +29,7 @@ export interface SummaryTagNode extends SummaryTag {
 }
 
 export type SummaryAsNodes =
-  | SummaryEndOfLineNode
-  | SummaryTextNode
-  | SummaryTagNode;
+  SummaryEndOfLineNode | SummaryTextNode | SummaryTagNode;
 
 /** @deprecated Use {@link SummaryAsNodes} instead. */
 export type SummaryAsTags = SummaryAsNodes;

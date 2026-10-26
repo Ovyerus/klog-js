@@ -235,8 +235,9 @@ information on the Klog format, visit the
 
 ## Development
 
-The Nix dev shell includes Node, pnpm, and upstream `klog-time-tracker`. JSON
-conversion tests run its `klog json` command against temporary files, so use:
+Use Node 24 or 26 for development with the current test toolchain. The Nix dev
+shell provides Node 24, pnpm, and upstream `klog-time-tracker`. JSON conversion
+tests run its `klog json` command against temporary files, so use:
 
 ```sh
 nix develop -c pnpm test

@@ -14,8 +14,10 @@ export enum RecordDateFormat {
 // TODO: maybe always just use string/string[] in summaries rather than forcing the user to submit a Summary class.
 
 /** Per-render record options, propagated to every entry without mutation. */
-export interface RecordFormatOptions
-  extends Omit<EntryFormatOptions, "indentation"> {
+export interface RecordFormatOptions extends Omit<
+  EntryFormatOptions,
+  "indentation"
+> {
   /** Valid klog indentation; unlike a standalone entry, a record requires it. */
   indentation?: Indentation;
   dateFormat?: RecordDateFormat;

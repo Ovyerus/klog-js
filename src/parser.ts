@@ -298,8 +298,8 @@ interface ParseAST {
 export const parseAST = ((source, rule) => {
   const match = grammar.match(source, rule);
 
-  if (match.succeeded()) return toAST(match, mapping);
-  else throw new Error(match.message);
+  if (match.failed()) throw new Error(match.message);
+  return toAST(match, mapping);
 }) as ParseAST;
 
 /**
