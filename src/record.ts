@@ -3,7 +3,7 @@ import { Duration } from "./duration.js";
 import { Entry, type EntryFormatOptions } from "./entry.js";
 import { Range } from "./range.js";
 import { Time } from "./time.js";
-import { Indentation, RecordNode } from "./types.js";
+import { Indentation, KlogRecordJSON, RecordNode } from "./types.js";
 import { Summary } from "./summary.js";
 
 export enum RecordDateFormat {
@@ -211,6 +211,33 @@ export class Record {
       });
     }
     return warnings;
+  }
+
+  /** Return one object from `klog json`'s records array, not a JSON string.
+   * Includes evaluated totals, target, difference, and entry views. Does not
+   * include the CLI's records/errors/warnings envelope or run warning checks.
+   * Stored date/time display styles are used, not previous render overrides.
+   */
+  toKlogJSON(): KlogRecordJSON {
+    // Normalize signed zero without masking other numeric values.
+    const total_mins = this.toMinutes() + 0;
+    const should_total_mins = (this.shouldTotal?.toMinutes() ?? 0) + 0;
+    const diff_mins = total_mins - should_total_mins;
+    return {
+      date: this.dateString,
+      ...(this.summary?.toKlogJSON() ?? { summary: "", tags: [] }),
+      total: Duration.fromMinutes(total_mins).toString(),
+      total_mins,
+      should_total:
+        Duration.fromMinutes(should_total_mins).toString() +
+        (this.shouldTotal === null ? "" : "!"),
+      should_total_mins,
+      diff: Duration.fromMinutes(diff_mins).toString({
+        explicitPositive: true,
+      }),
+      diff_mins,
+      entries: this.entries.map((entry) => entry.toKlogJSON()),
+    };
   }
 
   /**

@@ -2,7 +2,7 @@ import { Duration, type DurationOptions } from "./duration.js";
 import { Range, RangeDashFormat } from "./range.js";
 import { TimeFormat } from "./time.js";
 import { Summary } from "./summary.js";
-import { EntryNode, Indentation } from "./types.js";
+import { EntryNode, Indentation, KlogEntryJSON } from "./types.js";
 
 /** Non-mutating formatting overrides for an entry and its nested values. */
 export interface EntryFormatOptions {
@@ -55,6 +55,33 @@ export class Entry {
    */
   toMinutes() {
     return this.value.toMinutes();
+  }
+
+  /** Convert to an entry object from `klog json`, without altering toJSON().
+   * Durations use canonical signs, while time endpoints retain stored formats.
+   * Open ranges contribute zero and have no end/end_mins properties.
+   */
+  toKlogJSON(): KlogEntryJSON {
+    // JSON represents both signed zero values as 0.
+    const total_mins = this.toMinutes() + 0;
+    const base = {
+      ...(this.summary?.toKlogJSON() ?? { summary: "", tags: [] }),
+      total: Duration.fromMinutes(total_mins).toString(),
+      total_mins,
+    };
+    if (this.value instanceof Duration) return { ...base, type: "duration" };
+    const start = this.value.start.toString();
+    const start_mins = this.value.start.toMinutesSinceMidnight();
+    if (this.value.end === null)
+      return { ...base, type: "open_range", start, start_mins };
+    return {
+      ...base,
+      type: "range",
+      start,
+      start_mins,
+      end: this.value.end.toString(),
+      end_mins: this.value.end.toMinutesSinceMidnight(),
+    };
   }
 
   /**

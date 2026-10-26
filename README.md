@@ -100,6 +100,43 @@ same entry-related options, while preserving `entry.toString("\t")` and
 `Range.toString({ format, timeFormat, openRangePlaceholderCharCount })` also
 accept per-render overrides. Summary wrapping is not performed automatically.
 
+### Exporting upstream-compatible JSON
+
+`toKlogJSON()` returns a plain object matching a record inside upstream
+`klog json`'s `records` array:
+
+```js
+const [record] = parse(`2024-05-05 (8h!)
+    9:00 - 17:00 Work #Project="Ab/c"
+    -30m Break
+`);
+
+const result = record.toKlogJSON();
+console.log(result.total); // "7h30m"
+console.log(result.total_mins); // 450
+console.log(result.diff); // "-30m"
+console.log(result.entries[0].type); // "range"
+
+const text = JSON.stringify(result, null, 2);
+```
+
+Use `records.map(record => record.toKlogJSON())` to export several records.
+`Entry.toKlogJSON()` returns an upstream entry object; `Summary.toKlogJSON()`
+returns the shared `{ summary, tags }` fields. The exported TypeScript types
+include `KlogRecordJSON`, the discriminated `KlogEntryJSON` union, and
+`KlogSummaryJSON`.
+
+Durations and totals use upstream's canonical signs. Tag strings are sorted,
+retain duplicates, and use upstream's casing and quoting rules. Open ranges have
+no `end` fields and contribute zero minutes. Dates and time endpoints reflect
+the model's stored formats, not prior `toString()` overrides; parsed date
+separators currently normalize to dashes.
+
+This exports record data only: it does not implement the CLI's top-level
+`{ records, errors, warnings }` envelope, filtering, or `--now` option. Use
+`getWarnings()` separately when needed. Existing `toJSON()` methods and
+automatic `JSON.stringify(record)` serialization are unchanged.
+
 ### Checking records for likely mistakes
 
 Warnings are opt-in and do not change records, parsing, or calculated totals:
@@ -145,9 +182,22 @@ information on the Klog format, visit the
 - [ ] Automatic wrapping of summary lines?
 - [x] Applying the same formatting options across all entries in a record.
 - [x] Get warnings for a record (similar to how Klog does).
-- [ ] `toKlogJSON` for classes that returns an object compatible with
+- [x] `toKlogJSON` for classes that returns an object compatible with
       `klog json`.
 - [ ] Other miniscule fixes around formatting, especially with summaries.
+
+## Development
+
+The Nix dev shell includes Node, pnpm, and upstream `klog-time-tracker`. JSON
+conversion tests run its `klog json` command against temporary files, so use:
+
+```sh
+nix develop -c pnpm test
+```
+
+To check another installed upstream release, set `KLOG_BIN` to its executable
+path when running the tests. The comparison tests fail rather than skip when
+`klog` is unavailable.
 
 ## Reporting Bugs
 

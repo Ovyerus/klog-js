@@ -1,4 +1,4 @@
-import { Indentation } from "./types.js";
+import { Indentation, KlogSummaryJSON } from "./types.js";
 
 export interface SummaryTag {
   name: string;
@@ -41,6 +41,37 @@ function tagFromMatch(match: RegExpMatchArray): SummaryTag {
   }
   if (value) tag.value = value;
   return tag;
+}
+
+function klogTagString(match: RegExpMatchArray): string {
+  const { value } = tagFromMatch(match);
+  // Go uses Unicode simple lowercase, not contextual/full string casing.
+  // U+0130 is the one lowercase expansion in JavaScript's default casing.
+  const name = Array.from(match.groups!.name, (char) =>
+    char === "\u0130" ? "i" : char.toLowerCase(),
+  ).join("");
+  if (!value) return `#${name}`;
+  const quote = /^[\p{L}\d_-]+$/u.test(value)
+    ? ""
+    : value.includes('"')
+      ? "'"
+      : '"';
+  return `#${name}=${quote}${value}${quote}`;
+}
+
+function compareCodePoints(a: string, b: string): number {
+  // Go sorts UTF-8 strings by bytes, which matches code-point order for Unicode.
+  // JavaScript's default UTF-16 sorting differs for supplementary characters.
+  let i = 0,
+    j = 0;
+  while (i < a.length && j < b.length) {
+    const left = a.codePointAt(i)!;
+    const right = b.codePointAt(j)!;
+    if (left !== right) return left - right;
+    i += left > 0xffff ? 2 : 1;
+    j += right > 0xffff ? 2 : 1;
+  }
+  return a.length - b.length;
 }
 
 // TODO: throw if any lines with blank characters
@@ -90,6 +121,18 @@ export class Summary {
     }
 
     return nodes;
+  }
+
+  /** Return upstream's canonical summary text and sorted tag strings.
+   * Duplicate tags are retained; this does not change lines or the tags getter.
+   */
+  toKlogJSON(): KlogSummaryJSON {
+    const summary = this.toString().replace(/\r\n/g, "\n");
+    const tags: string[] = [];
+    for (const line of summary.split("\n")) {
+      for (const match of tagMatches(line)) tags.push(klogTagString(match));
+    }
+    return { summary, tags: tags.sort(compareCodePoints) };
   }
 
   toString(indentation: Indentation | null = null, startOnNextLine = false) {

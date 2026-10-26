@@ -55,6 +55,52 @@ export interface DurationNode {
   sign: Sign;
 }
 
+/** Summary fields shared by upstream record and entry JSON objects. */
+export interface KlogSummaryJSON {
+  summary: string;
+  tags: string[];
+}
+
+interface KlogEntryJSONBase extends KlogSummaryJSON {
+  total: string;
+  total_mins: number;
+}
+
+export interface KlogDurationEntryJSON extends KlogEntryJSONBase {
+  type: "duration";
+}
+
+export interface KlogOpenRangeEntryJSON extends KlogEntryJSONBase {
+  type: "open_range";
+  start: string;
+  start_mins: number;
+}
+
+export interface KlogClosedRangeEntryJSON extends KlogEntryJSONBase {
+  type: "range";
+  start: string;
+  start_mins: number;
+  end: string;
+  end_mins: number;
+}
+
+export type KlogEntryJSON =
+  | KlogDurationEntryJSON
+  | KlogOpenRangeEntryJSON
+  | KlogClosedRangeEntryJSON;
+
+/** One object inside `klog json`'s records array, not the CLI envelope. */
+export interface KlogRecordJSON extends KlogSummaryJSON {
+  date: string;
+  total: string;
+  total_mins: number;
+  should_total: string;
+  should_total_mins: number;
+  diff: string;
+  diff_mins: number;
+  entries: KlogEntryJSON[];
+}
+
 export type KlogNode =
   | FileNode
   | RecordNode

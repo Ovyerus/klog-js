@@ -29,6 +29,9 @@ in browsers; avoid introducing Node-only APIs into `src/`.
   day shifts, and non-mutation guarantees.
 - `tests/formatting.test.ts`: non-mutating render overrides, legacy entry
   indentation arguments, option propagation, and formatted round trips.
+- `tests/klog-json.test.ts`: required live comparisons against upstream
+  `klog json` with isolated config and temporary inputs. `KLOG_BIN` can select
+  another executable; missing upstream tooling must fail, not silently skip.
 
 ## Documentation
 
@@ -39,8 +42,9 @@ documentation.
 
 ## Development commands
 
-Use the existing pnpm lockfile and package scripts. `flake.nix` provides Node
-and pnpm. If they are not on PATH, prefix commands with `nix develop -c`.
+Use the existing pnpm lockfile and package scripts. `flake.nix` provides Node,
+pnpm, and `klog-time-tracker` (the `klog` command). If they are not on PATH,
+prefix commands with `nix develop -c`.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -93,7 +97,9 @@ using `toEqual` may ignore formatting options. Assert those options or rendered
 strings explicitly when they matter.
 
 Keep the library's own JSON representation distinct from upstream `klog json`.
-Upstream JSON compatibility is a README TODO, not an existing API guarantee.
+`Record.toKlogJSON()`, `Entry.toKlogJSON()`, and `Summary.toKlogJSON()` target
+upstream record/entry data, not its CLI diagnostics envelope. Keep canonical
+JSON formatting separate from display overrides and existing `toJSON()` methods.
 Record warnings are opt-in via `Record.getWarnings({ now })`; keep warning
 checks non-mutating and distinct from parser validation. Do not add CLI commands
 or dependencies merely to mirror a new upstream CLI release.
