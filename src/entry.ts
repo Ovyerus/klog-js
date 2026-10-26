@@ -1,7 +1,20 @@
-import { Duration } from "./duration.js";
-import { Range } from "./range.js";
+import { Duration, type DurationOptions } from "./duration.js";
+import { Range, RangeDashFormat } from "./range.js";
+import { TimeFormat } from "./time.js";
 import { Summary } from "./summary.js";
 import { EntryNode, Indentation } from "./types.js";
+
+/** Non-mutating formatting overrides for an entry and its nested values. */
+export interface EntryFormatOptions {
+  /** One indentation unit. null omits indentation for standalone entries. */
+  indentation?: Indentation | null;
+  /** Display format for all range endpoints. */
+  timeFormat?: TimeFormat;
+  rangeDashFormat?: RangeDashFormat;
+  openRangePlaceholderCharCount?: number;
+  /** Applied to duration entries; omitted properties retain their stored values. */
+  duration?: DurationOptions;
+}
 
 /**
  * A single time entry.
@@ -46,13 +59,28 @@ export class Entry {
 
   /**
    * Render the entry as a Klog string.
-   * @param indent - The indentation to use for the entry. May be `null` for no indentation.
+   * Accepts render options or the legacy indentation string/null argument.
+   * Options apply to this rendering only, including continuation indentation.
    */
-  toString(indent: Indentation | null = "    ") {
-    // TODO: automatically move to next line if over certain length? See what Klog does
+  toString(indentOrOptions: Indentation | null | EntryFormatOptions = "    ") {
+    const options: EntryFormatOptions =
+      typeof indentOrOptions === "object" && indentOrOptions !== null
+        ? indentOrOptions
+        : { indentation: indentOrOptions };
+    const indent =
+      options.indentation === undefined ? "    " : options.indentation;
+    const value =
+      this.value instanceof Duration
+        ? this.value.toString(options.duration)
+        : this.value.toString({
+            format: options.rangeDashFormat,
+            timeFormat: options.timeFormat,
+            openRangePlaceholderCharCount:
+              options.openRangePlaceholderCharCount,
+          });
     const summary = this.summary
       ? " " + this.summary.toString(indent, false)
       : "";
-    return `${indent || ""}${this.value}${summary}`;
+    return `${indent || ""}${value}${summary}`;
   }
 }

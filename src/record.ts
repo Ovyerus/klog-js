@@ -1,9 +1,9 @@
 import { differenceInCalendarDays, format, isValid } from "date-fns";
 import { Duration } from "./duration.js";
-import { Entry } from "./entry.js";
+import { Entry, type EntryFormatOptions } from "./entry.js";
 import { Range } from "./range.js";
 import { Time } from "./time.js";
-import { RecordNode } from "./types.js";
+import { Indentation, RecordNode } from "./types.js";
 import { Summary } from "./summary.js";
 
 export enum RecordDateFormat {
@@ -11,8 +11,17 @@ export enum RecordDateFormat {
   Slashes,
 }
 
-// TODO: `normalise` to apply sweeping format changes throughout the tree (dash spacing, am/pm or 24 hour, explicit duration +, etc)
 // TODO: maybe always just use string/string[] in summaries rather than forcing the user to submit a Summary class.
+
+/** Per-render record options, propagated to every entry without mutation. */
+export interface RecordFormatOptions
+  extends Omit<EntryFormatOptions, "indentation"> {
+  /** Valid klog indentation; unlike a standalone entry, a record requires it. */
+  indentation?: Indentation;
+  dateFormat?: RecordDateFormat;
+  /** Omitted preserves existing newline behavior; explicit values normalize all lines. */
+  newline?: "\n" | "\r\n";
+}
 
 /** Stable warning categories, matching the upstream klog checker names. */
 export type RecordWarningCode =
@@ -205,18 +214,26 @@ export class Record {
   }
 
   /**
-   * Render the record as a Klog string.
+   * Render the record as a Klog string. Supplied options override nested formats
+   * for this call only; omitted options preserve stored formatting and defaults.
    */
-  toString() {
-    // TODO: support windows newlines
+  toString(options: RecordFormatOptions = {}) {
     let headline = this.dateString;
-    if (this.shouldTotal !== null) headline += ` (${this.shouldTotal}!)`;
+    if (options.dateFormat !== undefined) {
+      const separator =
+        options.dateFormat === RecordDateFormat.Dashes ? "-" : "/";
+      headline = format(this.date, `yyyy${separator}MM${separator}dd`);
+    }
+    if (this.shouldTotal !== null)
+      headline += ` (${this.shouldTotal.toString(options.duration)}!)`;
 
     const summary = this.summary
       ? this.summary.toString(null, false) + "\n"
       : "";
-    const entries = this.entries.map((e) => e.toString()).join("\n");
-
-    return headline + "\n" + summary + entries;
+    const entries = this.entries.map((e) => e.toString(options)).join("\n");
+    const text = headline + "\n" + summary + entries;
+    return options.newline === undefined
+      ? text
+      : text.replace(/\r?\n/g, options.newline);
   }
 }

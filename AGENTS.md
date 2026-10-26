@@ -27,6 +27,8 @@ in browsers; avoid introducing Node-only APIs into `src/`.
   indentation, shifted range, and summary round-trip regressions.
 - `tests/warnings.test.ts`: opt-in record warning categories, reference times,
   day shifts, and non-mutation guarantees.
+- `tests/formatting.test.ts`: non-mutating render overrides, legacy entry
+  indentation arguments, option propagation, and formatted round trips.
 
 ## Documentation
 

@@ -1,5 +1,5 @@
 import { Duration } from "./duration.js";
-import { Time } from "./time.js";
+import { Time, TimeFormat } from "./time.js";
 import { TimeRangeNode } from "./types.js";
 
 /**
@@ -18,6 +18,12 @@ export interface RangeOptions {
   format?: RangeDashFormat;
   /** The number of placeholder characters to use for an open range. */
   openRangePlaceholderCharCount?: number;
+}
+
+/** Per-render overrides; omitted options retain each value's stored format. */
+export interface RangeFormatOptions extends RangeOptions {
+  /** Override the display format of both endpoints. */
+  timeFormat?: TimeFormat;
 }
 
 /**
@@ -106,13 +112,27 @@ export class Range {
   }
 
   /**
-   * Render the range as a Klog string.
+   * Render the range without changing stored formatting.
+   * @throws {Error} An open range's placeholder count is not a positive safe integer.
    */
-  toString() {
-    const dash = this.format === RangeDashFormat.Spaces ? " - " : "-";
-    return `${this.start}${dash}${
-      this.open ? "?".repeat(this.openRangePlaceholderCharCount) : this.end
-    }`;
+  toString({
+    format = this.format,
+    openRangePlaceholderCharCount = this.openRangePlaceholderCharCount,
+    timeFormat,
+  }: RangeFormatOptions = {}) {
+    const dash = format === RangeDashFormat.Spaces ? " - " : "-";
+    if (
+      this.open &&
+      (!Number.isSafeInteger(openRangePlaceholderCharCount) ||
+        openRangePlaceholderCharCount < 1)
+    )
+      throw new Error(
+        "Open range placeholder count must be a positive safe integer",
+      );
+    const end = this.open
+      ? "?".repeat(openRangePlaceholderCharCount)
+      : this.end!.toString(timeFormat);
+    return `${this.start.toString(timeFormat)}${dash}${end}`;
   }
 
   /**

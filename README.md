@@ -56,6 +56,50 @@ const record = new Record(new Date(2024, 1, 24), [
 */
 ```
 
+### Formatting records
+
+Pass rendering overrides to `Record.toString()` to apply one style throughout a
+record. This changes the returned text, not the record or its nested values:
+
+```js
+import { parse, TimeFormat, RangeDashFormat } from "klog.js";
+
+const [record] = parse(`2024-05-05 (8h!)
+    9:00 - 17:00 Work
+    -30m Break
+`);
+
+record.toString({
+  indentation: "  ",
+  timeFormat: TimeFormat.TwelveHour,
+  rangeDashFormat: RangeDashFormat.NoSpaces,
+  duration: { explicitPositive: true },
+});
+// 2024-05-05 (+8h!)
+//   9:00am-5:00pm Work
+//   -30m Break
+```
+
+All options are optional. Omitted properties retain each value's stored
+formatting or the existing defaults:
+
+| Option                          | Values / effect                                                                                                                                                   |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `indentation`                   | Two, three, or four spaces, or `"\t"`; continuation lines use two units.                                                                                          |
+| `timeFormat`                    | `TimeFormat.TwelveHour` or `TimeFormat.TwentyFourHour`, for all range endpoints.                                                                                  |
+| `rangeDashFormat`               | `RangeDashFormat.Spaces` or `RangeDashFormat.NoSpaces`.                                                                                                           |
+| `duration`                      | `{ explicitPositive, zeroSign }`, applied to duration entries and the should-total. `zeroSign` is `""`, `"+"`, or `"-"` and is independent of `explicitPositive`. |
+| `dateFormat`                    | `RecordDateFormat.Dashes` or `RecordDateFormat.Slashes`.                                                                                                          |
+| `newline`                       | `"\n"` or `"\r\n"`; when supplied, normalizes line breaks throughout the output.                                                                                  |
+| `openRangePlaceholderCharCount` | Positive safe integer controlling the number of `?` characters in an open range.                                                                                  |
+
+Existing no-argument calls keep their behavior. Standalone entries accept the
+same entry-related options, while preserving `entry.toString("\t")` and
+`entry.toString(null)` (no indentation).
+`Duration.toString({ explicitPositive, zeroSign })` and
+`Range.toString({ format, timeFormat, openRangePlaceholderCharCount })` also
+accept per-render overrides. Summary wrapping is not performed automatically.
+
 ### Checking records for likely mistakes
 
 Warnings are opt-in and do not change records, parsing, or calculated totals:
@@ -99,7 +143,7 @@ information on the Klog format, visit the
 ## TODO
 
 - [ ] Automatic wrapping of summary lines?
-- [ ] Applying the same formatting options across all entries in a record.
+- [x] Applying the same formatting options across all entries in a record.
 - [x] Get warnings for a record (similar to how Klog does).
 - [ ] `toKlogJSON` for classes that returns an object compatible with
       `klog json`.

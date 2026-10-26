@@ -118,14 +118,18 @@ export class Duration {
   }
 
   /**
-   * Render the duration as a Klog string.
+   * Render the duration as a Klog string, overriding only the supplied options.
    */
-  toString() {
-    if (this.#value === 0) return `${this.sign}0m`;
+  toString({
+    explicitPositive = this.explicitPositive,
+    zeroSign = this.zeroSign,
+  }: DurationOptions = {}) {
+    if (this.#value === 0) return `${zeroSign}0m`;
+    const sign = this.#value < 0 ? "-" : explicitPositive ? "+" : "";
 
     const h = this.hours !== 0 ? `${Math.abs(this.hours)}h` : "";
     const m = this.minutes !== 0 ? `${Math.abs(this.minutes)}m` : "";
-    return `${this.sign}${h}${m}`;
+    return `${sign}${h}${m}`;
   }
 
   /**
